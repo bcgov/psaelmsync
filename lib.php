@@ -4,11 +4,6 @@ defined('MOODLE_INTERNAL') || die();
 function local_psaelmsync_sync() {
     global $DB;
 
-    $log = [
-        'timecreated' => time(),
-    ];
-    $DB->insert_record('local_psaelmsync_runs', (object)$log);
-
     // Fetch API URL and token from config.
     $apiurl = get_config('local_psaelmsync', 'apiurl');
     $apitoken = get_config('local_psaelmsync', 'apitoken');
@@ -46,6 +41,9 @@ function local_psaelmsync_sync() {
         // Process each record.
         process_enrolment_record($record);
     }
+    // Log the end of the run time.
+    $log = ['timecreated' => time()];
+    $DB->insert_record('local_psaelmsync_runs', (object)$log);
 }
 
 function process_enrolment_record($record) {
