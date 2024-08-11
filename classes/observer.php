@@ -1,0 +1,118 @@
+<?php
+
+namespace local_psaelmsync;
+
+defined('MOODLE_INTERNAL') || die();
+
+class observer {
+    public static function course_completed(\core\event\course_completed $event) {
+
+        global $DB;
+        // Get course ID from event data.
+        $courseid = $event->courseid;
+        // Get user ID from event data.
+        $userid = $event->relateduserid;
+        // Get the course details so we can look up whether this course 
+        // is opted in to sending its completion data across to CData
+        // and get its ID Number 
+        $course = get_course($courseid);
+
+        $courseelement = new \core_course_list_element($course);
+
+        if ($courseelement->has_custom_fields()) {
+            
+            $fields = $courseelement->get_custom_fields();
+            // Iterate through the custom fields.
+            foreach ($fields as $field) {
+                // Get the shortname of the custom field.
+                $shortname = $field->get_field()->get('shortname');
+                // Check if this field is 'completion_opt_in'.
+                if ($shortname === 'completion_opt_in') {
+                    // Get the value of the custom field.
+                    $value = $field->get_value();
+                    // Check if the value indicates that the course is opted in.
+                    if ($value == 1) { // Assuming 1 means the checkbox is checked.
+            
+                        // OK! this course is opted into sending the completion 
+                        // back to ELM for processing.
+
+                        // Get the course ID Number to match ELM's course_id 
+                        $courseidnumber = $course->idnumber;
+
+                        // Get user idnumber.
+                        $user = $DB->get_record('user', ['id' => $userid], 'idnumber, firstname, lastname, email');
+                        
+                        // Get enrolment_id value from local_psaelmsync_enrol table.
+                        $elm_enrolment_id = $DB->get_field('local_psaelmsync_enrol', 'elm_enrolment_id', [
+                            'course_id' => $courseid,
+                            'userid' => $userid
+                        ]);
+
+                        // Setup other static variables
+                        $record_id = time();
+                        $processed = 0;
+                        $enrol_status = 'Complete';
+                        $class_code = 'ITEM-000-1';
+                        $datecreated = date('Y-m-d h:i:s');
+
+                        // Setup the actual cURL call
+                        $apiurl = get_config('local_psaelmsync', 'completion_apiurl');
+                        $apitoken = get_config('local_psaelmsync', 'completion_apitoken');
+                        $ch = curl_init($apiurl);
+                        
+                        // prepare data to post
+                        $data = [
+                            'record_id' => $record_id, 
+                            'processed' => $processed, 
+                            'ernol_status' => $enrol_status, 
+                            'ernolment_id' => (int) $elm_enrolment_id, 
+                            'course_id' => (int) $courseidnumber, 
+                            'class_code' => $class_code, 
+                            'date_created' => $datecreated, 
+                            'email' => $user->email,
+                            'GUID' => $user->idnumber,
+                            'first_name' => $user->firstname, 
+                            'last_name' => $user->lastname
+                        ];
+                        
+                        $jsonData = json_encode($data);
+                        $options = array(
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_POST => true,
+                            CURLOPT_POSTFIELDS => $jsonData,
+                            CURLOPT_HTTPHEADER => array(
+                                "Authorization: Bearer " . $apitoken,
+                                "Content-Type: application/json",
+                                "Content-Length: " . strlen($jsonData)
+                                )
+                            );
+                        curl_setopt_array($ch, $options);
+                        $response = curl_exec($ch);
+
+                        curl_close($ch);
+
+                        $log = [
+                            'record_id' => $record_id,
+                            'record_date_created' => $datecreated,
+                            'course_id' => $courseid,
+                            'course_name' => $course->fullname,
+                            'user_id' => $userid,
+                            'user_firstname' => $user->firstname,
+                            'user_lastname' => $user->lastname,
+                            'user_guid' => $user->idnumber,
+                            'user_email' => $user->email,
+                            'enrolment_id' => $elm_enrolment_id,
+                            'action' => '', // Set action if needed
+                            'status' => 'Completed',
+                            'timestamp' => time(),
+                        ];
+                        
+                        $DB->insert_record('local_psaelmsync_logs', (object)$log);
+                    }
+                }
+            }
+        } else {
+            error_log('Custom field doesn\'t exist?');
+        }
+    }
+}

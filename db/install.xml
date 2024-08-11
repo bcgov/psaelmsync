@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/psaelmsync/db" VERSION="2023080201" COMMENT="PSA Enrol Sync plugin">
+<TABLES>
+    <TABLE NAME="local_psaelmsync_logs" COMMENT="Logs for PSA ELM Sync plugin">
+        <FIELDS>
+            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
+            <FIELD NAME="record_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Unique record ID"/>
+            <FIELD NAME="record_date_created" TYPE="char" LENGTH="100" NOTNULL="true" COMMENT="Date record created in CData"/>
+            <FIELD NAME="course_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Course ID"/>
+            <FIELD NAME="course_name" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Course Name"/>
+            <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User ID"/>
+            <FIELD NAME="user_firstname" TYPE="char" LENGTH="100" NOTNULL="true" COMMENT="User First Name"/>
+            <FIELD NAME="user_lastname" TYPE="char" LENGTH="100" NOTNULL="true" COMMENT="User Last Name"/>
+            <FIELD NAME="user_guid" TYPE="char" LENGTH="100" NOTNULL="true" COMMENT="User GUID"/>
+            <FIELD NAME="user_email" TYPE="char" LENGTH="100" NOTNULL="true" COMMENT="User Email"/>
+            <FIELD NAME="enrolment_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Custom enrolment ID"/>
+            <FIELD NAME="action" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="Action (enrolled, suspended)"/>
+            <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="Status (success, error)"/>
+            <FIELD NAME="timestamp" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Timestamp"/>
+        </FIELDS>
+        <KEYS>
+            <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        </KEYS>
+    </TABLE>
+    <TABLE NAME="local_psaelmsync_runs" COMMENT="Run logs for PSA ELM Sync plugin">
+        <FIELDS>
+            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
+            <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Time created"/>
+        </FIELDS>
+        <KEYS>
+            <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        </KEYS>
+    </TABLE>
+    <TABLE NAME="local_psaelmsync_enrol" COMMENT="Custom enrolment data for PSA Enrol Sync plugin">
+        <FIELDS>
+            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
+            <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User ID"/>
+            <FIELD NAME="enrolid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Enrolment instance ID"/>
+            <FIELD NAME="elm_enrolment_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Custom enrolment ID"/>
+            <FIELD NAME="course_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Course ID"/>
+            <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Time created"/>
+        </FIELDS>
+        <KEYS>
+            <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        </KEYS>
+    </TABLE>
+</TABLES>
+
+</XMLDB>
