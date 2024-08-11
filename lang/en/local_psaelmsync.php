@@ -1,7 +1,7 @@
 <?php
 $string['pluginname'] = 'PSA ELM Sync';
 $string['plugindesc'] = 'Read enrolment data posted to CData from ELM and then return completion data back.';
-$string['logs'] = 'EnrolSync Logs';
+$string['logs'] = 'ELM Sync Logs';
 $string['record_id'] = 'Record ID';
 $string['course_id'] = 'Course ID';
 $string['enrolment_id'] = 'Enrolment ID';
