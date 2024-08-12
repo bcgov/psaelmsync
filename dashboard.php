@@ -73,16 +73,20 @@ $conditions = [];
 $params = [];
 
 if (!empty($search)) {
-    $conditions[] = $DB->sql_like('course_name', ':search1', false);
-    $conditions[] = $DB->sql_like('user_firstname', ':search2', false);
-    $conditions[] = $DB->sql_like('user_lastname', ':search3', false);
-    $conditions[] = $DB->sql_like('user_guid', ':search4', false);
-    $conditions[] = $DB->sql_like('user_email', ':search5', false);
+    $conditions[] = $DB->sql_like('status', ':search1', false);
+    $conditions[] = $DB->sql_like('course_name', ':search2', false);
+    $conditions[] = $DB->sql_like('user_firstname', ':search3', false);
+    $conditions[] = $DB->sql_like('user_lastname', ':search4', false);
+    $conditions[] = $DB->sql_like('user_guid', ':search5', false);
+    $conditions[] = $DB->sql_like('user_email', ':search6', false);
+    $conditions[] = $DB->sql_like('enrolment_id', ':search7', false);
     $params['search1'] = "%$search%";
     $params['search2'] = "%$search%";
     $params['search3'] = "%$search%";
     $params['search4'] = "%$search%";
     $params['search5'] = "%$search%";
+    $params['search6'] = "%$search%";
+    $params['search7'] = "%$search%";
 }
 
 $where = !empty($conditions) ? implode(' OR ', $conditions) : '1=1';
