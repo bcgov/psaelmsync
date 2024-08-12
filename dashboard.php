@@ -32,7 +32,7 @@ $lastruns = $DB->get_records_sql($sql);
     </div>
     <div class="col-md-7">
         <details class="p-3">
-            <summary>Run history</summary>
+            <summary>Intake run history</summary>
             <?php foreach($lastruns as $run): ?>
             <?php
             $start = (int) $run->starttime / 1000;
