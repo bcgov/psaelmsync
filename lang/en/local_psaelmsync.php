@@ -12,6 +12,7 @@ $string['user_details'] = 'User Details';
 $string['course_name'] = 'Course Name';
 $string['user_id'] = 'User ID';
 $string['action'] = 'Action';
+$string['search'] = 'Search';
 $string['already_enrolled'] = 'Already Enrolled';
 $string['enrolled'] = 'Enrolled';
 $string['suspended'] = 'Suspend';

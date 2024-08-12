@@ -3,6 +3,7 @@ defined('MOODLE_INTERNAL') || die();
 
 function local_psaelmsync_sync() {
     global $DB;
+    $runlogstarttime = floor(microtime(true) * 1000);
 
     // Fetch API URL and token from config.
     $apiurl = get_config('local_psaelmsync', 'apiurl');
@@ -36,19 +37,36 @@ function local_psaelmsync_sync() {
     usort($data['records'], function ($a, $b) {
         return strtotime($a['date_created']) - strtotime($b['date_created']);
     });
-
+    $typecounts = [];
+    $recordcount = 0;
+    $enrolcount = 0;
+    $suspendcount = 0;
     foreach ($data['records'] as $record) {
-        // Process each record.
-        process_enrolment_record($record);
+        $recordcount++;
+        // Process each record. Returns the enrolment_type for logging
+        $action = process_enrolment_record($record);
+        $typecounts[] = $action;
+    }
+    // Loop through to pull out how many enrols and drops respectively.
+    foreach($typecounts as $t) {
+        if($t == 'Enrol') $enrolcount++;
+        if($t == 'Suspend') $suspendcount++;
     }
     // Log the end of the run time.
-    $log = ['timecreated' => time()];
+    $runlogendtime = floor(microtime(true) * 1000);
+    $log = [
+            'starttime' => $runlogstarttime, 
+            'endtime' => $runlogendtime, 
+            'recordcount' => $recordcount,
+            'enrolcount' => $enrolcount,
+            'suspendcount' => $suspendcount
+        ];
     $DB->insert_record('local_psaelmsync_runs', (object)$log);
 }
 
 function process_enrolment_record($record) {
+    
     global $DB;
-
     /**
      * Sample record 
      * record_id	29412
@@ -90,9 +108,6 @@ function process_enrolment_record($record) {
         $user = create_user($user_first_name, $user_last_name, $user_email, $user_guid);
         $user_id = $user->id;
     }
-    // the following doesn't work as chatgpt said to use the course->id to lookup the enrolid 
-    // which is just wrong. I'm not even sure we want to do this lookup as 
-    // $enrolment_exists = $DB->record_exists('user_enrolments', array('enrolid' => $course->id, 'userid' => $user_id));
 
     if ($enrolment_status == 'Enrol') {
         // Enrol the user in the course.
@@ -107,6 +122,11 @@ function process_enrolment_record($record) {
 
     // Callback API with processed status.
     update_api_processed_status($record_id);
+    
+    // We return the enrolment_status so that we can count each enrol or suspend
+    // when we log the run.
+    return $enrolment_status;
+
 }
 
 function create_user($first_name, $last_name, $email, $guid) {

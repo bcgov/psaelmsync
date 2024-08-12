@@ -32,7 +32,9 @@ class log_table extends \table_sql {
         return ucfirst($values->status);
     }
     public function col_user_lastname($values) {
-        return $values->user_firstname . ' ' . $values->user_lastname;
+        $name = $values->user_firstname . ' ' . $values->user_lastname;
+        $user_url = new \moodle_url('/user/view.php', array('id' => $values->user_id));
+        return \html_writer::link($user_url, $name);
     }
     public function col_user_email($values) {
         return $values->user_email;

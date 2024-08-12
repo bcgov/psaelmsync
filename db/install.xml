@@ -25,7 +25,11 @@
     <TABLE NAME="local_psaelmsync_runs" COMMENT="Run logs for PSA ELM Sync plugin">
         <FIELDS>
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
-            <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Time created"/>
+            <FIELD NAME="starttime" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Time run started"/>
+            <FIELD NAME="endtime" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Time run ended"/>
+            <FIELD NAME="recordcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many records were processed"/>
+            <FIELD NAME="enrolcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many enrol records were processed"/>
+            <FIELD NAME="suspendcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many suspend records were processed"/>
         </FIELDS>
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
