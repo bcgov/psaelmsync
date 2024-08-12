@@ -3,4 +3,4 @@
 PSA ELM Sync is a Moodle plugin that reads course enrolment data sent by ELM and 
 sends completion data back.
 
-
+Built under PHP 8.1 and Moodle 4.2. 
