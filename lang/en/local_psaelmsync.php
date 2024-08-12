@@ -1,7 +1,7 @@
 <?php
 $string['pluginname'] = 'PSA ELM Sync';
 $string['plugindesc'] = 'Read enrolment data posted to CData from ELM and then return completion data back.';
-$string['logs'] = 'ELM Sync Logs';
+$string['logs'] = 'Dashboard';
 $string['record_id'] = 'Record ID';
 $string['course_id'] = 'Course ID';
 $string['enrolment_id'] = 'Enrolment ID';
@@ -23,9 +23,13 @@ $string['user_email'] = 'Email';
 $string['user_guid'] = 'GUID';
 $string['status'] = 'Status';
 $string['timestamp'] = 'Timestamp';
-$string['viewlogs'] = 'View logs';
+$string['viewlogs'] = 'Dashboard';
 $string['apiurl'] = 'Enrolment API URL';
 $string['apiurl_desc'] = 'CData Endpoint for enrolments.';
+$string['apiupdateurl'] = 'Enrolment API UPDATE URL';
+$string['apiupdateurl_desc'] = 'CData enrolment endpoint for updating individual records as processed.';
+$string['apiupdatetoken'] = 'Enrolment API UPDATE Token';
+$string['apiupdatetoken_desc'] = 'Token for updating CData (probably same as for read but maybe not).';
 $string['apitoken'] = 'API Token';
 $string['apitoken_desc'] = 'API Token for CData access. A Base64 encoded value of the username and password.';
 $string['completion_apiurl'] = 'Completion API URL';

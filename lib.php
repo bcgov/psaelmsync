@@ -84,9 +84,9 @@ function process_enrolment_record($record) {
      * date_updated	null
      */
     
-    $record_id = $record['record_id'];
+    $record_id = (int) $record['record_id'];
     $record_date_created = $record['date_created'];
-    $course_id = $record['course_id'];
+    $course_id = (int) $record['course_id'];
     $enrolment_status = $record['ernol_status'];
     $enrolment_id = $record['ernolment_id'];
     $user_first_name = $record['first_name'];
@@ -193,8 +193,10 @@ function send_welcome_email($user, $course) {
 
 function update_api_processed_status($record_id) {
     global $DB;
-
-    $callbackurl = 'https://cdata.virtuallearn.ca/api.php/records/enrol/' . $record_id;
+    
+    $apiupdateurl = get_config('local_psaelmsync', 'apiupdateurl');
+    $apiupdatetoken = get_config('local_psaelmsync', 'apiupdatetoken');
+    $callbackurl = $apiupdateurl . $record_id;
     $ch = curl_init($callbackurl);
     $data = array(
         'processed' => 1
@@ -205,7 +207,7 @@ function update_api_processed_status($record_id) {
         CURLOPT_CUSTOMREQUEST => "PUT",
         CURLOPT_POSTFIELDS => $jsonData,
         CURLOPT_HTTPHEADER => array(
-            "Authorization: Bearer fnjnejjnjnj",
+            "Authorization: Bearer " . $apiupdatetoken,
             "Content-Type: application/json",
             "Content-Length: " . strlen($jsonData)
         )

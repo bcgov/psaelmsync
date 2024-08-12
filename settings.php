@@ -4,6 +4,15 @@ defined('MOODLE_INTERNAL') || die();
 if ($hassiteconfig) {
     $settings = new admin_settingpage('local_psaelmsync', get_string('pluginname', 'local_psaelmsync'));
 
+    $settings->add(new admin_setting_heading('local_psaelmsync/dashboard', 
+        get_string('logs', 'local_psaelmsync'), 
+        html_writer::link(new moodle_url('/local/psaelmsync/dashboard.php'), get_string('viewlogs', 'local_psaelmsync'))));
+    
+    $settings->add(new admin_setting_configcheckbox('local_psaelmsync/enabled',
+        get_string('enabled', 'local_psaelmsync'),
+        get_string('enabled_desc', 'local_psaelmsync'),
+        1));
+
     $settings->add(new admin_setting_configtext('local_psaelmsync/apiurl', 
         get_string('apiurl', 'local_psaelmsync'), 
         get_string('apiurl_desc', 'local_psaelmsync'), 
@@ -14,14 +23,15 @@ if ($hassiteconfig) {
         get_string('apitoken_desc', 'local_psaelmsync'), 
         '', PARAM_TEXT));
 
-    $settings->add(new admin_setting_heading('local_psaelmsync/dashboard', 
-        get_string('logs', 'local_psaelmsync'), 
-        html_writer::link(new moodle_url('/local/psaelmsync/dashboard.php'), get_string('viewlogs', 'local_psaelmsync'))));
-    
-    $settings->add(new admin_setting_configcheckbox('local_psaelmsync/enabled',
-        get_string('enabled', 'local_psaelmsync'),
-        get_string('enabled_desc', 'local_psaelmsync'),
-        1));
+    $settings->add(new admin_setting_configtext('local_psaelmsync/apiupdateurl', 
+        get_string('apiupdateurl', 'local_psaelmsync'), 
+        get_string('apiupdateurl_desc', 'local_psaelmsync'), 
+        '', PARAM_URL));
+
+    $settings->add(new admin_setting_configtext('local_psaelmsync/apiupdatetoken', 
+        get_string('apiupdatetoken', 'local_psaelmsync'), 
+        get_string('apiupdatetoken_desc', 'local_psaelmsync'), 
+        '', PARAM_TEXT));
 
     $settings->add(new admin_setting_configtext(
         'local_psaelmsync/completion_apiurl',
