@@ -112,7 +112,8 @@ function process_enrolment_record($record) {
     if ($enrolment_status == 'Enrol') {
         // Enrol the user in the course.
         enrol_user_in_course($user_id, $course->id, $enrolment_id);
-        //send_welcome_email($user, $course);
+        send_welcome_email($user, $course);
+
         log_record($record_id, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'enrolled', 'Success');
     } elseif ($enrolment_status == 'Suspend') {
         // Suspend the user in the course.
