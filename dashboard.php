@@ -33,20 +33,27 @@ $lastruns = $DB->get_records_sql($sql);
     <div class="col-md-7">
         <details class="p-3">
             <summary>Intake run history</summary>
+            <p>Runs where there was at least 1 enrolment or drop. Searching for a timestamp will show 
+                you records 2 minutes on either side of the given time.
+            </p>
             <?php foreach($lastruns as $run): ?>
             <?php
+            if(!empty($run->enrolcount) || !empty($run->enrolcount)):
             $start = (int) $run->starttime / 1000;
             $end = (int) $run->endtime / 1000;
             ?>
             <div class="my-2 p-3 bg-light rounded-lg">
                 <div>
-                    <a href="/local/psaelmsync/dashboard.php?search=<?= urlencode(date('Y-m-d H:i:s', (int) $start)) ?>"><?= date('Y-m-d H:i:s', (int) $start) ?> - <?= date('H:i:s', (int) $end) ?></a>
+                    <a href="/local/psaelmsync/dashboard.php?search=<?= urlencode(date('Y-m-d H:i:s', (int) $start)) ?>">
+                        <?= date('Y-m-d H:i:s', (int) $start) ?> - <?= date('H:i:s', (int) $end) ?>
+                    </a>
                 </div>
                 <div>
                     Enrolments: <span class="badge badge-primary"><?= $run->enrolcount ?></span>
                     Drops: <span class="badge badge-primary"><?= $run->suspendcount ?></span>
                 </div>
             </div>
+            <?php endif ?>
             <?php endforeach ?>
         </details>
     </div>
@@ -58,7 +65,9 @@ $lastruns = $DB->get_records_sql($sql);
         <input type="text" name="search" value="<?= s(optional_param('search', '', PARAM_RAW)) ?>" class="form-control" placeholder="<?= get_string('search', 'local_psaelmsync') ?>">
         <div class="input-group-append">
             <button class="btn btn-primary" type="submit"><?= get_string('search', 'local_psaelmsync') ?></button>
+            <a href="/local/psaelmsync/dashboard.php" class="btn btn-secondary">Clear</a>
         </div>
+        
     </div>
 </form>
 
