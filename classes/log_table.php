@@ -57,6 +57,6 @@ class log_table extends \table_sql {
     }
 
     public function col_timestamp($values) {
-        return userdate($values->timestamp);
+        return date('Y-m-d H:i:s' , $values->timestamp);
     }
 }

@@ -40,7 +40,7 @@ $lastruns = $DB->get_records_sql($sql);
             ?>
             <div class="my-2 p-3 bg-light rounded-lg">
                 <div>
-                    <?= date('Y-m-d h:i:s', (int) $start) ?> - <?= date('h:i:s', (int) $end) ?>
+                    <a href="/local/psaelmsync/dashboard.php?search=<?= urlencode(date('Y-m-d H:i:s', (int) $start)) ?>"><?= date('Y-m-d H:i:s', (int) $start) ?> - <?= date('H:i:s', (int) $end) ?></a>
                 </div>
                 <div>
                     Enrolments: <span class="badge badge-primary"><?= $run->enrolcount ?></span>
@@ -73,20 +73,29 @@ $conditions = [];
 $params = [];
 
 if (!empty($search)) {
-    $conditions[] = $DB->sql_like('status', ':search1', false);
-    $conditions[] = $DB->sql_like('course_name', ':search2', false);
-    $conditions[] = $DB->sql_like('user_firstname', ':search3', false);
-    $conditions[] = $DB->sql_like('user_lastname', ':search4', false);
-    $conditions[] = $DB->sql_like('user_guid', ':search5', false);
-    $conditions[] = $DB->sql_like('user_email', ':search6', false);
-    $conditions[] = $DB->sql_like('enrolment_id', ':search7', false);
-    $params['search1'] = "%$search%";
-    $params['search2'] = "%$search%";
-    $params['search3'] = "%$search%";
-    $params['search4'] = "%$search%";
-    $params['search5'] = "%$search%";
-    $params['search6'] = "%$search%";
-    $params['search7'] = "%$search%";
+   // Check if the search string is a valid ISO8601 date
+   $timestamp = strtotime($search);
+   if ($timestamp !== false) {
+       // Convert the timestamp to Unix time.
+       $conditions[] = 'timestamp BETWEEN :start AND :end';
+       $params['start'] = $timestamp - 120;
+       $params['end'] = $timestamp + 120; // + 100 seconds to capture the whole run
+   } else {
+        $conditions[] = $DB->sql_like('status', ':search1', false);
+        $conditions[] = $DB->sql_like('course_name', ':search2', false);
+        $conditions[] = $DB->sql_like('user_firstname', ':search3', false);
+        $conditions[] = $DB->sql_like('user_lastname', ':search4', false);
+        $conditions[] = $DB->sql_like('user_guid', ':search5', false);
+        $conditions[] = $DB->sql_like('user_email', ':search6', false);
+        $conditions[] = $DB->sql_like('enrolment_id', ':search7', false);
+        $params['search1'] = "%$search%";
+        $params['search2'] = "%$search%";
+        $params['search3'] = "%$search%";
+        $params['search4'] = "%$search%";
+        $params['search5'] = "%$search%";
+        $params['search6'] = "%$search%";
+        $params['search7'] = "%$search%";
+   }
 }
 
 $where = !empty($conditions) ? implode(' OR ', $conditions) : '1=1';
