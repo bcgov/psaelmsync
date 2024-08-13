@@ -1,7 +1,7 @@
 <?php
-$string['pluginname'] = 'PSA ELM Sync';
+$string['pluginname'] = 'PSALS Sync';
 $string['plugindesc'] = 'Read enrolment data posted to CData from ELM and then return completion data back.';
-$string['logs'] = 'Dashboard';
+$string['logs'] = 'PSALS Sync Dashboard';
 $string['record_id'] = 'Record ID';
 $string['course_id'] = 'Course ID';
 $string['enrolment_id'] = 'Enrolment ID';
@@ -23,7 +23,7 @@ $string['user_email'] = 'Email';
 $string['user_guid'] = 'GUID';
 $string['status'] = 'Status';
 $string['timestamp'] = 'Timestamp';
-$string['viewlogs'] = 'Dashboard';
+$string['viewlogs'] = 'View Dashboard';
 $string['apiurl'] = 'Enrolment API URL';
 $string['apiurl_desc'] = 'CData Endpoint for enrolments.';
 $string['apiupdateurl'] = 'Enrolment API UPDATE URL';
