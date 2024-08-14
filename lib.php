@@ -47,6 +47,7 @@ function local_psaelmsync_sync() {
         $action = process_enrolment_record($record);
         $typecounts[] = $action;
     }
+
     // Loop through to pull out how many enrols and drops respectively.
     foreach($typecounts as $t) {
         if($t == 'Enrol') $enrolcount++;
@@ -93,10 +94,24 @@ function process_enrolment_record($record) {
     $user_last_name = $record['last_name'];
     $user_email = $record['email'];
     $user_guid = $record['GUID'];
+    
+    // Not only a decent idea, but also until we can get actual unique IDs in cdata,
+    // we basically need to create a unique ID here by hashing the relevent info.
+    $hash_content = $record_date_created . $course_id . $enrolment_status . $user_guid . $user_email;
+    $hash = hash('sha256', $hash_content);
+
+    // $existinghash = hash('sha256', $input_data, true); // Generate the binary SHA-256 hash
+    // $record = $DB->get_record('local_psaelmsync_enrol', ['sha256hash' => $existinghash]);
+    // if ($record) {
+    //     // Hash exists in the table
+    // } else {
+    //     // Hash does not exist
+    // }
+
 
     // Get course by IDNumber.
     if (!$course = $DB->get_record('course', array('idnumber' => $course_id))) {
-        log_record($record_id, $record_date_created, $course_id, $enrolment_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'error', 'Course not found');
+        log_record($record_id, $hash, $record_date_created, $course_id, $enrolment_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'error', 'Course not found');
         return;
     }
 
@@ -111,20 +126,22 @@ function process_enrolment_record($record) {
 
     if ($enrolment_status == 'Enrol') {
         // Enrol the user in the course.
-        enrol_user_in_course($user_id, $course->id, $enrolment_id);
-        send_welcome_email($user, $course);
+        enrol_user_in_course($user_id, $course->id, $enrolment_id, $hash, $record_id);
 
-        log_record($record_id, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'enrolled', 'Success');
+        //send_welcome_email($user, $course);
+
+        log_record($record_id, $hash, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'enrolled', 'Success');
+
     } elseif ($enrolment_status == 'Suspend') {
         // Suspend the user in the course.
         suspend_user_in_course($user_id, $course->id);
-        log_record($record_id, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'suspended', 'Success');
+        log_record($record_id, $hash, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'suspended', 'Success');
     }
 
     // Callback API with processed status.
     update_api_processed_status($record_id);
     
-    // We return the enrolment_status so that we can count each enrol or suspend
+    // We return the enrolment_status so that we can count enrols and suspends
     // when we log the run.
     return $enrolment_status;
 
@@ -153,7 +170,7 @@ function create_user($first_name, $last_name, $email, $guid) {
     return $user;
 }
 
-function enrol_user_in_course($user_id, $course_id, $enrolment_id) {
+function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $record_id) {
     global $DB;
 
     $enrol = enrol_get_plugin('manual');
@@ -165,6 +182,8 @@ function enrol_user_in_course($user_id, $course_id, $enrolment_id) {
         // Store the custom enrolment ID in the new table.
         $custom_enrolment = new stdClass();
         $custom_enrolment->userid = $user_id;
+        $custom_enrolment->record_id = $record_id;
+        $custom_enrolment->sha256hash = $hash;
         $custom_enrolment->enrolid = $instance->id;
         $custom_enrolment->elm_enrolment_id = $enrolment_id;
         $custom_enrolment->course_id = $course_id;
@@ -218,13 +237,14 @@ function update_api_processed_status($record_id) {
     curl_close($ch);
 }
 
-function log_record($record_id, $record_date_created, $course_id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
+function log_record($record_id, $hash, $record_date_created, $course_id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
     global $DB;
 
     $course = $DB->get_record('course', array('id' => $course_id), 'fullname', MUST_EXIST);
 
     $log = new stdClass();
     $log->record_id = $record_id;
+    $log->sha256hash = $hash;
     $log->record_date_created = $record_date_created;
     $log->course_id = $course_id;
     $log->course_name = $course->fullname;

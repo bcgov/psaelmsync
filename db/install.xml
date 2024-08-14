@@ -4,6 +4,7 @@
     <TABLE NAME="local_psaelmsync_logs" COMMENT="Logs for PSA ELM Sync plugin">
         <FIELDS>
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
+            <FIELD NAME="sha256hash" TYPE="BINARY" LENGTH="32" NOTNULL="true" COMMENT="A hash of $record_date_created . $course_id . $enrolment_status . $user_guid . $user_email"/>
             <FIELD NAME="record_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Unique record ID"/>
             <FIELD NAME="record_date_created" TYPE="char" LENGTH="100" NOTNULL="true" COMMENT="Date record created in CData"/>
             <FIELD NAME="course_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Course ID"/>
@@ -38,6 +39,8 @@
     <TABLE NAME="local_psaelmsync_enrol" COMMENT="Custom enrolment data for PSA Enrol Sync plugin">
         <FIELDS>
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
+            <FIELD NAME="sha256hash" TYPE="BINARY" LENGTH="32" NOTNULL="true" COMMENT="A hash of $record_date_created . $course_id . $enrolment_status . $user_guid . $user_email"/>
+            <FIELD NAME="record_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Record ID from CData"/>
             <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User ID"/>
             <FIELD NAME="enrolid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Enrolment instance ID"/>
             <FIELD NAME="elm_enrolment_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Custom enrolment ID"/>
