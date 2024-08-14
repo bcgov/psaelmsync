@@ -22,6 +22,11 @@ if ($hassiteconfig) {
         get_string('apitoken', 'local_psaelmsync'), 
         get_string('apitoken_desc', 'local_psaelmsync'), 
         '', PARAM_TEXT));
+    
+    $settings->add(new admin_setting_configtext('local_psaelmsync/datefilterminutes', 
+        get_string('datefilterminutes', 'local_psaelmsync'), 
+        get_string('datefilterminutes_desc', 'local_psaelmsync'), 
+        '', PARAM_INT));
 
     $settings->add(new admin_setting_configtext('local_psaelmsync/apiupdateurl', 
         get_string('apiupdateurl', 'local_psaelmsync'), 

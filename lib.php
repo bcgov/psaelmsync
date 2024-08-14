@@ -5,21 +5,27 @@ function local_psaelmsync_sync() {
     global $DB;
     $runlogstarttime = floor(microtime(true) * 1000);
 
+    // https://analytics-testapi.psa.gov.bc.ca/apiserver/api.rsc/Datamart_ELM_Course_Enrollment_info
     // Fetch API URL and token from config.
     $apiurl = get_config('local_psaelmsync', 'apiurl');
     $apitoken = get_config('local_psaelmsync', 'apitoken');
+    $datefilter = get_config('local_psaelmsync', 'datefilterminutes');
 
     if (!$apiurl || !$apitoken) {
         mtrace('PSA Enrol Sync: API URL or Token not set.');
         return;
     }
+    $mins = '-' . $datefilter . ' minutes';
+    $time_minus_two_hours = date('Y-m-d H:i:s', strtotime($mins));
+    // $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $time_minus_two_hours .'%27'; // 2024-08-06T11%3A00%27
+    $apiurlfiltered = $apiurl . ''; // until we're actually dealing with cdata and not the mock endpoint
 
     // Make API call.
     $curl = new curl();
     $options = array(
         'CURLOPT_HTTPHEADER' => array("Authorization: Bearer $apitoken"),
     );
-    $response = $curl->get($apiurl, $options);
+    $response = $curl->get($apiurlfiltered, $options);
 
     if ($curl->get_errno()) {
         mtrace('PSA Enrol Sync: API request failed: ' . $curl->error);
@@ -34,7 +40,9 @@ function local_psaelmsync_sync() {
     }
 
     // Ensure that we're sorting the data by date_created in ascending order.
-    usort($data['records'], function ($a, $b) {
+    // How performant is this? Can we not just rely on the URL filter being
+    // sorted in the right order? Or do we need this overhead?
+    usort($data['value'], function ($a, $b) {
         return strtotime($a['date_created']) - strtotime($b['date_created']);
     });
     $typecounts = [];
@@ -44,7 +52,7 @@ function local_psaelmsync_sync() {
     foreach ($data['records'] as $record) {
         $recordcount++;
         // Process each record. Returns the enrolment_type for logging
-        $action = process_enrolment_record($record);
+        $action = process_enrolment_record($record,$apiurlfiltered);
         $typecounts[] = $action;
     }
 
@@ -65,52 +73,66 @@ function local_psaelmsync_sync() {
     $DB->insert_record('local_psaelmsync_runs', (object)$log);
 }
 
-function process_enrolment_record($record) {
+function process_enrolment_record($record, $apiurl) {
     
     global $DB;
     /**
      * Sample record 
-     * record_id	29412
-     * processed	0
-     * ernol_status	"Enrol"
-     * ernolment_id	31254
-     * course_id	29916
-     * class_code	"ITEM-2089-1"
-     * first_name	"Fizz"
-     * last_name	"Buzz"
-     * email	"Fizz.Buzz@gov.bc.ca"
-     * GUID	"06338216D944CAAA041DCED300FDC"
-     * date_created	"2024-07-25 13:00:20"
-     * date_deleted	null
-     * date_updated	null
+     * {
+     *   "COURSE_IDENTIFIER": 32090,
+     *   "COURSE_STATE": "Suspend",
+     *   "COURSE_STATE_DATE": "2023-04-11T08:06:43.000-07:00",
+     *   "GUID": "0000DE7307A24F53B8DC558936D0000",
+     *   "COURSE_SHORTNAME": "ITEM-2162-1",
+     *   "date_created": "2024-08-14T11:10:20.000-07:00",
+     *   "date_deleted": null,
+     *   "date_updated": null,
+     *   "EMAIL": "fizzbuzz@gov.bc.ca",
+     *   "FIRST_NAME": "Fizz",
+     *   "LAST_NAME": "Buzz",
+     *   "USER_EFFECTIVE_DATE": "2023-06-09",
+     *   "USER_STATE": "ACTIVE" //might be repurposed into enrolment_id holder
+     * },
      */
     
-    $record_id = (int) $record['record_id'];
+    // CData doesn't currently supply a unique record ID yet, so we just make one up.
+    $record_id = floor(microtime(true) * 1000); // (int) $record['record_id'];
+    // In current state the plan is to use the USER_STATE field to hold the 
+    // enrolment ID. At some point hopefully we'll get away from the spaghetti 
+    // that is our field mapping.
+    $enrolment_id = $record['USER_STATE'];
+    // The rest map to CData fields
     $record_date_created = $record['date_created'];
-    $course_id = (int) $record['course_id'];
-    $enrolment_status = $record['ernol_status'];
-    $enrolment_id = $record['ernolment_id'];
-    $user_first_name = $record['first_name'];
-    $user_last_name = $record['last_name'];
-    $user_email = $record['email'];
+    $course_id = (int) $record['COURSE_IDENTIFIER'];
+    $enrolment_status = $record['COURSE_STATE'];
+    $user_first_name = $record['FIRST_NAME'];
+    $user_last_name = $record['LAST_NAME'];
+    $user_email = $record['EMAIL'];
     $user_guid = $record['GUID'];
     
     // Not only a decent idea, but also until we can get actual unique IDs in cdata,
     // we basically need to create a unique ID here by hashing the relevent info.
-    $hash_content = $record_date_created . $course_id . $enrolment_id. $enrolment_status . $user_guid . $user_email;
+    // Is this computationally expensive? 
+    // We'll want to include $enrolment_id in this hash for extra-good unqiueness but 
+    // right now we're dynamically generating them (should we just not maybe?) which 
+    // would break this, so just leaving it out for the time being. I think the date_created
+    // field does a good enough job for now.x
+    $hash_content = $record_date_created . $course_id . $enrolment_status . $user_guid . $user_email;
     $hash = hash('sha256', $hash_content);
 
     $hashcheck = $DB->get_record('local_psaelmsync_enrol', ['sha256hash' => $hash], '*', IGNORE_MULTIPLE);
 
+    // Does the hash exist in the table? If so we want to skip this record as 
+    // we've already processed it.
     if ($hashcheck) {
-        // Hash exists in the table so we want to skip this record as 
-        // we've already processed it.
         return;
     }
 
-    // Get course by IDNumber.
+    // If there's no course with this IDNumber (note: not the Moodle course ID 
+    // but ELM's course ID), skip record. We want to log that this is happening 
+    // somehow; should probably send an email #TODO
     if (!$course = $DB->get_record('course', array('idnumber' => $course_id))) {
-        log_record($record_id, $hash, $record_date_created, $course_id, $enrolment_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'error', 'Course not found');
+        log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $enrolment_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'error', 'Course not found');
         return;
     }
 
@@ -127,18 +149,19 @@ function process_enrolment_record($record) {
         // Enrol the user in the course.
         enrol_user_in_course($user_id, $course->id, $enrolment_id, $hash, $record_id);
 
-        //send_welcome_email($user, $course);
+        send_welcome_email($user, $course);
 
-        log_record($record_id, $hash, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'enrolled', 'Success');
+        log_record($record_id, $apiurl, $hash, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'enrolled', 'Success');
 
     } elseif ($enrolment_status == 'Suspend') {
         // Suspend the user in the course.
         suspend_user_in_course($user_id, $course->id);
-        log_record($record_id, $hash, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'suspended', 'Success');
+        log_record($record_id, $apiurl, $hash, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'suspended', 'Success');
     }
 
     // Callback API with processed status.
-   // update_api_processed_status($record_id);
+    // DISABLED for now as we're now checking for hashes, but this still might be a good approach.
+    // update_api_processed_status($record_id);
     
     // We return the enrolment_status so that we can count enrols and suspends
     // when we log the run.
@@ -199,15 +222,16 @@ function suspend_user_in_course($user_id, $course_id) {
     if ($enrol) {
         $instance = $DB->get_record('enrol', array('courseid' => $course_id, 'enrol' => 'manual'), '*', MUST_EXIST);
         $enrol->unenrol_user($instance, $user_id);
+        #TODO should we be also deleting the record from local_psaelmsync_enrol here?
     }
+
 }
 
 function send_welcome_email($user, $course) {
     $subject = "Welcome to {$course->fullname}";
     $message = "Dear {$user->firstname} {$user->lastname},\n\nYou have been enrolled in the course '{$course->fullname}'.\n\nBest regards,\nMoodle Team";
 
-    // email_to_user($user, core_user::get_support_user(), $subject, $message);
-    email_to_user('allankh@icloud.com', core_user::get_support_user(), $subject, $message);
+    email_to_user($user, core_user::get_support_user(), $subject, $message);
 }
 
 function update_api_processed_status($record_id) {
@@ -236,13 +260,14 @@ function update_api_processed_status($record_id) {
     curl_close($ch);
 }
 
-function log_record($record_id, $hash, $record_date_created, $course_id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
+function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
     global $DB;
 
     $course = $DB->get_record('course', array('id' => $course_id), 'fullname', MUST_EXIST);
 
     $log = new stdClass();
     $log->record_id = $record_id;
+    $log->apiurl = $apiurl;
     $log->sha256hash = $hash;
     $log->record_date_created = $record_date_created;
     $log->course_id = $course_id;
