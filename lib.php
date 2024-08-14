@@ -97,17 +97,16 @@ function process_enrolment_record($record) {
     
     // Not only a decent idea, but also until we can get actual unique IDs in cdata,
     // we basically need to create a unique ID here by hashing the relevent info.
-    $hash_content = $record_date_created . $course_id . $enrolment_status . $user_guid . $user_email;
+    $hash_content = $record_date_created . $course_id . $enrolment_id. $enrolment_status . $user_guid . $user_email;
     $hash = hash('sha256', $hash_content);
 
-    // $existinghash = hash('sha256', $input_data, true); // Generate the binary SHA-256 hash
-    // $record = $DB->get_record('local_psaelmsync_enrol', ['sha256hash' => $existinghash]);
-    // if ($record) {
-    //     // Hash exists in the table
-    // } else {
-    //     // Hash does not exist
-    // }
+    $hashcheck = $DB->get_record('local_psaelmsync_enrol', ['sha256hash' => $hash], '*', IGNORE_MULTIPLE);
 
+    if ($hashcheck) {
+        // Hash exists in the table so we want to skip this record as 
+        // we've already processed it.
+        return;
+    }
 
     // Get course by IDNumber.
     if (!$course = $DB->get_record('course', array('idnumber' => $course_id))) {
@@ -139,7 +138,7 @@ function process_enrolment_record($record) {
     }
 
     // Callback API with processed status.
-    update_api_processed_status($record_id);
+   // update_api_processed_status($record_id);
     
     // We return the enrolment_status so that we can count enrols and suspends
     // when we log the run.
