@@ -59,20 +59,32 @@ class observer {
                         $apiurl = get_config('local_psaelmsync', 'completion_apiurl');
                         $apitoken = get_config('local_psaelmsync', 'completion_apitoken');
                         $ch = curl_init($apiurl);
-                        
+                        // `COURSE_COMPLETE_DATE` varchar(100) NOT NULL,
+                        // `COURSE_STATE` varchar(100) NOT NULL,
+                        // `COURSE_IDENTIFIER` int(11) NOT NULL,
+                        // `COURSE_SHORTNAME` varchar(100) NOT NULL,
+                        // `FIRST_NAME` varchar(255) NOT NULL,
+                        // `LAST_NAME` varchar(255) NOT NULL,
+                        // `EMAIL` varchar(255) NOT NULL,
+                        // `GUID` varchar(255) NOT NULL,
+                        // `USER_EFFECTIVE_DATE` varchar(255) NOT NULL,
+                        // `USER_STATE` varchar(255) NOT NULL,
+                        // `date_created` datetime NOT NULL,
+                        // `date_deleted` datetime DEFAULT NULL,
+                        // `date_updated` datetime DEFAULT NULL,
                         // prepare data to post
                         $data = [
-                            'record_id' => $record_id, 
-                            'processed' => $processed, 
-                            'ernol_status' => $enrol_status, 
-                            'ernolment_id' => (int) $elm_enrolment_id, 
-                            'course_id' => (int) $courseidnumber, 
-                            'class_code' => $class_code, 
+                            'COURSE_COMPLETE_DATE' => date('Y-m-d'),
+                            'COURSE_STATE' => $enrol_status, 
+                            // 'ernolment_id' => (int) $elm_enrolment_id, 
+                            'USER_STATE' => 'Active',
+                            'COURSE_IDENTIFIER' => (int) $courseidnumber, 
+                            'COURSE_SHORTNAME' => $class_code, 
                             'date_created' => $datecreated, 
-                            'email' => $user->email,
+                            'EMAIL' => $user->email,
                             'GUID' => $user->idnumber,
-                            'first_name' => $user->firstname, 
-                            'last_name' => $user->lastname
+                            'FIRST_NAME' => $user->firstname, 
+                            'LAST_NAME' => $user->lastname
                         ];
                         
                         $jsonData = json_encode($data);
