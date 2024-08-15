@@ -105,6 +105,7 @@ function process_enrolment_record($record, $apiurl) {
     $record_date_created = $record['date_created'];
     $course_id = (int) $record['COURSE_IDENTIFIER'];
     $enrolment_status = $record['COURSE_STATE'];
+    $class_code = $record['COURSE_SHORTNAME'];
     $user_first_name = $record['FIRST_NAME'];
     $user_last_name = $record['LAST_NAME'];
     $user_email = $record['EMAIL'];
@@ -116,8 +117,8 @@ function process_enrolment_record($record, $apiurl) {
     // We'll want to include $enrolment_id in this hash for extra-good unqiueness but 
     // right now we're dynamically generating them (should we just not maybe?) which 
     // would break this, so just leaving it out for the time being. I think the date_created
-    // field does a good enough job for now.x
-    $hash_content = $record_date_created . $course_id . $enrolment_status . $user_guid . $user_email;
+    // field does a good enough job for now.
+    $hash_content = $record_date_created . $course_id . $class_code . $enrolment_status . $user_guid . $user_email;
     $hash = hash('sha256', $hash_content);
 
     $hashcheck = $DB->get_record('local_psaelmsync_enrol', ['sha256hash' => $hash], '*', IGNORE_MULTIPLE);
@@ -132,7 +133,7 @@ function process_enrolment_record($record, $apiurl) {
     // but ELM's course ID), skip record. We want to log that this is happening 
     // somehow; should probably send an email #TODO
     if (!$course = $DB->get_record('course', array('idnumber' => $course_id))) {
-        log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $enrolment_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'error', 'Course not found');
+        log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'error', 'Course not found');
         return;
     }
 
@@ -147,16 +148,16 @@ function process_enrolment_record($record, $apiurl) {
 
     if ($enrolment_status == 'Enrol') {
         // Enrol the user in the course.
-        enrol_user_in_course($user_id, $course->id, $enrolment_id, $hash, $record_id);
+        enrol_user_in_course($user_id, $course->id, $enrolment_id, $hash, $record_id, $class_code);
 
         send_welcome_email($user, $course);
 
-        log_record($record_id, $apiurl, $hash, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'enrolled', 'Success');
+        log_record($record_id, $apiurl, $hash, $record_date_created, $course->id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'enrolled', 'Success');
 
     } elseif ($enrolment_status == 'Suspend') {
         // Suspend the user in the course.
         suspend_user_in_course($user_id, $course->id);
-        log_record($record_id, $apiurl, $hash, $record_date_created, $course->id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'suspended', 'Success');
+        log_record($record_id, $apiurl, $hash, $record_date_created, $course->id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'suspended', 'Success');
     }
 
     // Callback API with processed status.
@@ -192,7 +193,7 @@ function create_user($first_name, $last_name, $email, $guid) {
     return $user;
 }
 
-function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $record_id) {
+function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $record_id, $class_code) {
     global $DB;
 
     $enrol = enrol_get_plugin('manual');
@@ -209,6 +210,7 @@ function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $recor
         $custom_enrolment->enrolid = $instance->id;
         $custom_enrolment->elm_enrolment_id = $enrolment_id;
         $custom_enrolment->course_id = $course_id;
+        $custom_enrolment->class_code =  $class_code;
         $custom_enrolment->timecreated = time();
         $DB->insert_record('local_psaelmsync_enrol', $custom_enrolment);
 
@@ -271,6 +273,7 @@ function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id
     $log->sha256hash = $hash;
     $log->record_date_created = $record_date_created;
     $log->course_id = $course_id;
+    $log->class_code =  $class_code;
     $log->course_name = $course->fullname;
     $log->user_id = $user_id;
     $log->user_firstname = $user_first_name;

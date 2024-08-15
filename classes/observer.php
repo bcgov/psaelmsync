@@ -43,16 +43,26 @@ class observer {
                         $user = $DB->get_record('user', ['id' => $userid], 'idnumber, firstname, lastname, email');
                         
                         // Get enrolment_id value from local_psaelmsync_enrol table.
-                        $elm_enrolment_id = $DB->get_field('local_psaelmsync_enrol', 'elm_enrolment_id', [
-                            'course_id' => $courseid,
-                            'userid' => $userid
-                        ]);
+                        // $elm_enrolment_id = $DB->get_field('local_psaelmsync_enrol', 'elm_enrolment_id', [
+                        //     'course_id' => $courseid,
+                        //     'userid' => $userid
+                        // ]);
+                        // Get enrolment_id and another field (e.g., status) from local_psaelmsync_enrol table.
+                        $deets = $DB->get_record('local_psaelmsync_enrol', ['course_id' => $courseid, 'userid' => $userid], 'elm_enrolment_id, class_code');
+
+                        if (!$deets) {
+                            error_log('Issue getting records from local_psaelmsync_enrol');
+                            // #TODO send an email to an admin
+                            exit;
+                        }
+
+                        $elm_enrolment_id = $deets->elm_enrolment_id;
+                        $class_code = $deets->class_code;
 
                         // Setup other static variables
                         $record_id = time();
                         $processed = 0;
                         $enrol_status = 'Complete';
-                        $class_code = 'ITEM-000-1';
                         $datecreated = date('Y-m-d h:i:s');
 
                         // Setup the actual cURL call
