@@ -128,8 +128,8 @@ class observer {
                             'user_guid' => $user->idnumber,
                             'user_email' => $user->email,
                             'elm_enrolment_id' => $elm_enrolment_id,
-                            'action' => '', // Set action if needed
-                            'status' => 'Completed',
+                            'action' => 'Completed',
+                            'status' => 'Success',
                             'timestamp' => time(),
                         ];
                         
