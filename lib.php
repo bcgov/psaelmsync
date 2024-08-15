@@ -16,8 +16,8 @@ function local_psaelmsync_sync() {
         return;
     }
     $mins = '-' . $datefilter . ' minutes';
-    $time_minus_two_hours = date('Y-m-d H:i:s', strtotime($mins));
-    // $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $time_minus_two_hours .'%27'; // 2024-08-06T11%3A00%27
+    $time_minus_mins = date('Y-m-d H:i:s', strtotime($mins));
+    // $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $time_minus_mins .'%27'; // 2024-08-06T11%3A00%27
     $apiurlfiltered = $apiurl . ''; // until we're actually dealing with cdata and not the mock endpoint
 
     // Make API call.
@@ -42,7 +42,7 @@ function local_psaelmsync_sync() {
     // Ensure that we're sorting the data by date_created in ascending order.
     // How performant is this? Can we not just rely on the URL filter being
     // sorted in the right order? Or do we need this overhead?
-    usort($data['value'], function ($a, $b) {
+    usort($data['records'], function ($a, $b) {
         return strtotime($a['date_created']) - strtotime($b['date_created']);
     });
     $typecounts = [];
@@ -100,7 +100,7 @@ function process_enrolment_record($record, $apiurl) {
     // In current state the plan is to use the USER_STATE field to hold the 
     // enrolment ID. At some point hopefully we'll get away from the spaghetti 
     // that is our field mapping.
-    $enrolment_id = $record['USER_STATE'];
+    $enrolment_id = floor(microtime(true) * 1000);// $record['USER_STATE'];
     // The rest map to CData fields
     $record_date_created = $record['date_created'];
     $course_id = (int) $record['COURSE_IDENTIFIER'];
@@ -137,7 +137,7 @@ function process_enrolment_record($record, $apiurl) {
     }
 
     // Check if user exists by GUID or email.
-    if ($user = $DB->get_record('user', array('idnumber' => $user_guid))) {
+    if ($user = $DB->get_record('user', array('idnumber' => $user_guid),'*')) {
         $user_id = $user->id;
     } else {
         // Create new user.
