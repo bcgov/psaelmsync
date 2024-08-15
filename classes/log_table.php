@@ -10,10 +10,11 @@ class log_table extends \table_sql {
 
         parent::__construct($uniqueid);
 
-        $columns = array('status', 'course_name', 'elm_enrolment_id', 'record_date_created', 'user_lastname', 'user_email', 'user_guid', 'timestamp');
+        $columns = array('status','action', 'course_name', 'elm_enrolment_id', 'record_date_created', 'user_lastname', 'user_email', 'user_guid', 'timestamp');
         $this->define_columns($columns);
         $headers = array(
             get_string('status', 'local_psaelmsync'),
+            get_string('action', 'local_psaelmsync'),
             get_string('course_name', 'local_psaelmsync'),
             get_string('elm_enrolment_id', 'local_psaelmsync'),
             get_string('record_date_created', 'local_psaelmsync'),
@@ -30,6 +31,9 @@ class log_table extends \table_sql {
 
     public function col_status($values) {
         return ucfirst($values->status);
+    }
+    public function col_action($values) {
+        return ucfirst($values->action);
     }
     public function col_user_lastname($values) {
         $name = $values->user_firstname . ' ' . $values->user_lastname;

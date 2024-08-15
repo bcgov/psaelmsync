@@ -17,8 +17,10 @@ function local_psaelmsync_sync() {
     }
     $mins = '-' . $datefilter . ' minutes';
     $time_minus_mins = date('Y-m-d H:i:s', strtotime($mins));
-    // $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $time_minus_mins .'%27'; // 2024-08-06T11%3A00%27
-    $apiurlfiltered = $apiurl . ''; // until we're actually dealing with cdata and not the mock endpoint
+    // CData format for date filter is different than mock. Here's the CData format:
+    // $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $time_minus_mins .'%27';
+    // But here's the mock format:
+    $apiurlfiltered = $apiurl . '&filter=date_created,gt,' . urlencode($time_minus_mins);
 
     // Make API call.
     $curl = new curl();
@@ -28,7 +30,7 @@ function local_psaelmsync_sync() {
     $response = $curl->get($apiurlfiltered, $options);
 
     if ($curl->get_errno()) {
-        mtrace('PSA Enrol Sync: API request failed: ' . $curl->error);
+        mtrace('PSA Enrol Sync: API request failed: ' . $apiurlfiltered);
         return;
     }
 
@@ -111,7 +113,7 @@ function process_enrolment_record($record, $apiurl) {
     $user_email = $record['EMAIL'];
     $user_guid = $record['GUID'];
     
-    // Not only a decent idea, but also until we can get actual unique IDs in cdata,
+    // Until we can get actual unique IDs in cdata,
     // we basically need to create a unique ID here by hashing the relevent info.
     // Is this computationally expensive? 
     // We'll want to include $enrolment_id in this hash for extra-good unqiueness but 
@@ -121,7 +123,7 @@ function process_enrolment_record($record, $apiurl) {
     $hash_content = $record_date_created . $course_id . $class_code . $enrolment_status . $user_guid . $user_email;
     $hash = hash('sha256', $hash_content);
 
-    $hashcheck = $DB->get_record('local_psaelmsync_enrol', ['sha256hash' => $hash], '*', IGNORE_MULTIPLE);
+    $hashcheck = $DB->get_record('local_psaelmsync_logs', ['sha256hash' => $hash], '*', IGNORE_MULTIPLE);
 
     // Does the hash exist in the table? If so we want to skip this record as 
     // we've already processed it.
@@ -135,7 +137,20 @@ function process_enrolment_record($record, $apiurl) {
     if (!$course = $DB->get_record('course', array('idnumber' => $course_id))) {
         // We haven't done a user lookup yet so 
         $user_id = 0;
-        log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 'error', 'Course not found');
+        log_record($record_id, 
+                    $apiurl, 
+                    $hash, 
+                    $record_date_created, 
+                    $course_id, 
+                    $class_code, 
+                    $enrolment_id, 
+                    $user_id, 
+                    $user_first_name, 
+                    $user_last_name, 
+                    $user_email, 
+                    $user_guid, 
+                    'Course not found',
+                    'error');
         return;
     }
 
@@ -154,12 +169,38 @@ function process_enrolment_record($record, $apiurl) {
 
         send_welcome_email($user, $course);
 
-        log_record($record_id, $apiurl, $hash, $record_date_created, $course->id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'enrolled', 'Success');
+        log_record($record_id, 
+                    $apiurl, 
+                    $hash, 
+                    $record_date_created, 
+                    $course->id, 
+                    $class_code, 
+                    $enrolment_id, 
+                    $user_id, 
+                    $user_first_name, 
+                    $user_last_name, 
+                    $user_email, 
+                    $user_guid, 
+                    'enrolled', 
+                    'Success');
 
     } elseif ($enrolment_status == 'Suspend') {
         // Suspend the user in the course.
         suspend_user_in_course($user_id, $course->id);
-        log_record($record_id, $apiurl, $hash, $record_date_created, $course->id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'suspended', 'Success');
+        log_record($record_id, 
+                    $apiurl, 
+                    $hash, 
+                    $record_date_created, 
+                    $course->id, 
+                    $class_code, 
+                    $enrolment_id, 
+                    $user_id, 
+                    $user_first_name, 
+                    $user_last_name, 
+                    $user_email, 
+                    $user_guid, 
+                    'suspended', 
+                    'Success');
     }
 
     // Callback API with processed status.
@@ -267,7 +308,7 @@ function update_api_processed_status($record_id) {
 function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
     global $DB;
 
-    if (!$course = $DB->get_record('course', array('idnumber' => $course_id), 'fullname')) {
+    if (!$course = $DB->get_record('course', array('id' => $course_id), 'fullname')) {
         $coursefullname = 'Not found!';
     } else {
         $coursefullname = $course->fullname;
