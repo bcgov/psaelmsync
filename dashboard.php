@@ -96,7 +96,7 @@ if (!empty($search)) {
         $conditions[] = $DB->sql_like('user_lastname', ':search4', false);
         $conditions[] = $DB->sql_like('user_guid', ':search5', false);
         $conditions[] = $DB->sql_like('user_email', ':search6', false);
-        $conditions[] = $DB->sql_like('enrolment_id', ':search7', false);
+        $conditions[] = $DB->sql_like('elm_enrolment_id', ':search7', false);
         $params['search1'] = "%$search%";
         $params['search2'] = "%$search%";
         $params['search3'] = "%$search%";

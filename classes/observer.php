@@ -48,7 +48,7 @@ class observer {
                         //     'userid' => $userid
                         // ]);
                         // Get enrolment_id and another field (e.g., status) from local_psaelmsync_enrol table.
-                        $deets = $DB->get_record('local_psaelmsync_enrol', ['course_id' => $courseid, 'userid' => $userid], 'elm_enrolment_id, class_code');
+                        $deets = $DB->get_record('local_psaelmsync_enrol', ['course_id' => $courseid, 'userid' => $userid], 'elm_enrolment_id, class_code, sha256hash');
 
                         if (!$deets) {
                             error_log('Issue getting records from local_psaelmsync_enrol');
@@ -58,6 +58,7 @@ class observer {
 
                         $elm_enrolment_id = $deets->elm_enrolment_id;
                         $class_code = $deets->class_code;
+                        $sha256hash = $deets->sha256hash;
 
                         // Setup other static variables
                         $record_id = time();
@@ -88,6 +89,7 @@ class observer {
                             'COURSE_STATE' => $enrol_status, 
                             // 'ernolment_id' => (int) $elm_enrolment_id, 
                             'USER_STATE' => 'Active',
+                            'USER_EFFECTIVE_DATE' => '2017-02-14',
                             'COURSE_IDENTIFIER' => (int) $courseidnumber, 
                             'COURSE_SHORTNAME' => $class_code, 
                             'date_created' => $datecreated, 
@@ -116,14 +118,16 @@ class observer {
                         $log = [
                             'record_id' => $record_id,
                             'record_date_created' => $datecreated,
+                            'sha256hash' => $sha256hash,
                             'course_id' => $courseid,
+                            'class_code' => $class_code,
                             'course_name' => $course->fullname,
                             'user_id' => $userid,
                             'user_firstname' => $user->firstname,
                             'user_lastname' => $user->lastname,
                             'user_guid' => $user->idnumber,
                             'user_email' => $user->email,
-                            'enrolment_id' => $elm_enrolment_id,
+                            'elm_enrolment_id' => $elm_enrolment_id,
                             'action' => '', // Set action if needed
                             'status' => 'Completed',
                             'timestamp' => time(),

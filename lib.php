@@ -133,7 +133,9 @@ function process_enrolment_record($record, $apiurl) {
     // but ELM's course ID), skip record. We want to log that this is happening 
     // somehow; should probably send an email #TODO
     if (!$course = $DB->get_record('course', array('idnumber' => $course_id))) {
-        log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_first_name, $user_last_name, $user_email, $user_guid, 0, 'error', 'Course not found');
+        // We haven't done a user lookup yet so 
+        $user_id = 0;
+        log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, 'error', 'Course not found');
         return;
     }
 
@@ -262,10 +264,14 @@ function update_api_processed_status($record_id) {
     curl_close($ch);
 }
 
-function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
+function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
     global $DB;
 
-    $course = $DB->get_record('course', array('id' => $course_id), 'fullname', MUST_EXIST);
+    if (!$course = $DB->get_record('course', array('idnumber' => $course_id), 'fullname')) {
+        $coursefullname = 'Not found!';
+    } else {
+        $coursefullname = $course->fullname;
+    }
 
     $log = new stdClass();
     $log->record_id = $record_id;
@@ -273,8 +279,8 @@ function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id
     $log->sha256hash = $hash;
     $log->record_date_created = $record_date_created;
     $log->course_id = $course_id;
-    $log->class_code =  $class_code;
-    $log->course_name = $course->fullname;
+    $log->class_code = $class_code;
+    $log->course_name = $coursefullname;
     $log->user_id = $user_id;
     $log->user_firstname = $user_first_name;
     $log->user_lastname = $user_last_name;
