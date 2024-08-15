@@ -280,7 +280,7 @@ function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id
     $log->user_lastname = $user_last_name;
     $log->user_guid = $user_guid; 
     $log->user_email = $user_email;
-    $log->enrolment_id = $enrolment_id;
+    $log->elm_enrolment_id = $enrolment_id;
     $log->action = $action;
     $log->status = $status;
     $log->timestamp = time();
