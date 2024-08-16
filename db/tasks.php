@@ -5,8 +5,8 @@ $tasks = [
     [
         'classname' => 'local_psaelmsync\task\sync_task',
         'blocking' => 0,
-        'minute' => '*/5',
-        'hour' => '*',
+        'minute' => '5,15,25,35,45,55',
+        'hour' => '6-18',
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
