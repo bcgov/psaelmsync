@@ -151,16 +151,37 @@ function process_enrolment_record($record, $apiurl) {
                     $user_guid, 
                     'Course not found',
                     'error');
+        
         return;
     }
 
-    // Check if user exists by GUID or email.
+    // Check if user exists by GUID     .
     if ($user = $DB->get_record('user', array('idnumber' => $user_guid),'*')) {
         $user_id = $user->id;
     } else {
-        // Create new user.
-        $user = create_user($user_first_name, $user_last_name, $user_email, $user_guid);
-        $user_id = $user->id;
+        // Attempt to create a new user, handle any exceptions gracefully.
+        try {
+            $user = create_user($user_first_name, $user_last_name, $user_email, $user_guid);
+            $user_id = $user->id;
+        } catch (Exception $e) {
+            // Log the error
+            log_record($record_id, 
+                        $apiurl, 
+                        $hash, 
+                        $record_date_created, 
+                        $course_id, 
+                        $class_code, 
+                        $enrolment_id, 
+                        0, // No user ID since creation failed
+                        $user_first_name, 
+                        $user_last_name, 
+                        $user_email, 
+                        $user_guid, 
+                        'User creation failed',
+                        'error');
+            // Return to skip further processing of this record.
+            return;
+        }
     }
 
     if ($enrolment_status == 'Enrol') {
