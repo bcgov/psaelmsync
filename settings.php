@@ -51,6 +51,14 @@ if ($hassiteconfig) {
         get_string('completion_apitoken_desc', 'local_psaelmsync'),
         '', PARAM_ALPHANUMEXT
     ));
+    
+    $settings->add(new admin_setting_configtext(
+        'local_psaelmsync/notificationemails',
+        get_string('notificationemails', 'local_psaelmsync'),
+        get_string('notificationemails_desc', 'local_psaelmsync'),
+        '',
+        PARAM_TEXT
+    ));
 
     $ADMIN->add('localplugins', $settings);
 }

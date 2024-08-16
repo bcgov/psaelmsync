@@ -41,3 +41,5 @@ $string['completion_apitoken_desc'] = 'API Token for CData access. A Base64 enco
 $string['trigger_sync'] = 'Trigger PSA Enrol Sync';
 $string['sync_task'] = 'PSA Enrol Sync Task';
 $string['process_course_completion'] = 'Process course completion.';
+$string['notificationemails'] = 'Alert emails';
+$string['notificationemails_desc'] = 'When issues arise with the processing of records, send an alert to these (comma-separated) addresses.';

@@ -2,7 +2,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 function local_psaelmsync_sync() {
+
     global $DB;
+
     $runlogstarttime = floor(microtime(true) * 1000);
 
     // https://analytics-testapi.psa.gov.bc.ca/apiserver/api.rsc/Datamart_ELM_Course_Enrollment_info
@@ -51,6 +53,7 @@ function local_psaelmsync_sync() {
     $recordcount = 0;
     $enrolcount = 0;
     $suspendcount = 0;
+    $errorcount = 0;
     foreach ($data['records'] as $record) {
         $recordcount++;
         // Process each record. Returns the enrolment_type for logging
@@ -62,6 +65,7 @@ function local_psaelmsync_sync() {
     foreach($typecounts as $t) {
         if($t == 'Enrol') $enrolcount++;
         if($t == 'Suspend') $suspendcount++;
+        if($t == 'Error') $errorcount++;
     }
     // Log the end of the run time.
     $runlogendtime = floor(microtime(true) * 1000);
@@ -70,7 +74,8 @@ function local_psaelmsync_sync() {
             'endtime' => $runlogendtime, 
             'recordcount' => $recordcount,
             'enrolcount' => $enrolcount,
-            'suspendcount' => $suspendcount
+            'suspendcount' => $suspendcount,
+            'errorcount' => $errorcount
         ];
     $DB->insert_record('local_psaelmsync_runs', (object)$log);
 }
@@ -179,6 +184,9 @@ function process_enrolment_record($record, $apiurl) {
                         $user_guid, 
                         'User creation failed',
                         'error');
+            // Send an email notification
+            send_failure_notification($user_first_name, $user_last_name, $user_email, $e->getMessage());
+
             // Return to skip further processing of this record.
             return;
         }
@@ -354,4 +362,45 @@ function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id
     $log->timestamp = time();
 
     $DB->insert_record('local_psaelmsync_logs', $log);
+}
+
+// Function to send failure notification email
+function send_failure_notification($first_name, $last_name, $email, $error_message) {
+    global $CFG;
+
+    // Get the list of email addresses from admin settings
+    $admin_emails = get_config('local_psaelmsync', 'notificationemails');
+    
+    if (!empty($admin_emails)) {
+        $emails = explode(',', $admin_emails);
+        $subject = "User Creation Failure Notification";
+        $message = "A failure occurred during user creation.\n\n";
+        $message .= "Details:\n";
+        $message .= "Name: {$first_name} {$last_name}\n";
+        $message .= "Email: {$email}\n";
+        $message .= "Error: {$error_message}\n\n";
+        $message .= "Please investigate the issue.";
+        
+        // Create a dummy user object for sending the email
+        $dummyuser = new stdClass();
+        $dummyuser->email = 'noreply@example.com';
+        $dummyuser->firstname = 'System';
+        $dummyuser->lastname = 'Notifier';
+        $dummyuser->id = -99; // Dummy user id
+        
+        foreach ($emails as $admin_email) {
+            // Trim to remove any extra whitespace around email addresses
+            $admin_email = trim($admin_email);
+            
+            // Create a recipient user object
+            $recipient = new stdClass();
+            $recipient->email = $admin_email;
+            $recipient->id = -99; // Dummy user id
+            $recipient->firstname = 'Admin';
+            $recipient->lastname = 'User';
+            
+            // Send the email
+            email_to_user($recipient, $dummyuser, $subject, $message);
+        }
+    }
 }
