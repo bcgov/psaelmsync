@@ -12,6 +12,7 @@ function local_psaelmsync_sync() {
     $apiurl = get_config('local_psaelmsync', 'apiurl');
     $apitoken = get_config('local_psaelmsync', 'apitoken');
     $datefilter = get_config('local_psaelmsync', 'datefilterminutes');
+    $notificationhours = get_config('local_psaelmsync', 'notificationhours');
 
     if (!$apiurl || !$apitoken) {
         mtrace('PSA Enrol Sync: API URL or Token not set.');
@@ -54,6 +55,7 @@ function local_psaelmsync_sync() {
     $enrolcount = 0;
     $suspendcount = 0;
     $errorcount = 0;
+    $skippedcount = 0;
     foreach ($data['records'] as $record) {
         $recordcount++;
         // Process each record. Returns the enrolment_type for logging
@@ -66,6 +68,7 @@ function local_psaelmsync_sync() {
         if($t == 'Enrol') $enrolcount++;
         if($t == 'Suspend') $suspendcount++;
         if($t == 'Error') $errorcount++;
+        if($t == 'Skipped') $skippedcount++;
     }
     // Log the end of the run time.
     $runlogendtime = floor(microtime(true) * 1000);
@@ -75,9 +78,18 @@ function local_psaelmsync_sync() {
             'recordcount' => $recordcount,
             'enrolcount' => $enrolcount,
             'suspendcount' => $suspendcount,
-            'errorcount' => $errorcount
+            'errorcount' => $errorcount,
+            'skippedcount' => $skippedcount
         ];
     $DB->insert_record('local_psaelmsync_runs', (object)$log);
+
+    // Check for the time since the last enrolment or suspend. 
+    // If it's been more than N hours then send an email to the 
+    // admin list notifying them that the bridge might be blocked
+    // on the ELM.
+    check_last_enrolment_or_suspend($notificationhours);
+    
+
 }
 
 function process_enrolment_record($record, $apiurl) {
@@ -118,22 +130,27 @@ function process_enrolment_record($record, $apiurl) {
     $user_email = $record['EMAIL'];
     $user_guid = $record['GUID'];
     
-    // Until we can get actual unique IDs in cdata,
-    // we basically need to create a unique ID here by hashing the relevent info.
-    // Is this computationally expensive? 
-    // We'll want to include $enrolment_id in this hash for extra-good unqiueness but 
-    // right now we're dynamically generating them (should we just not maybe?) which 
-    // would break this, so just leaving it out for the time being. I think the date_created
-    // field does a good enough job for now.
+    // Until we can get actual unique IDs in cdata, we need to create a unique 
+    // ID here by hashing the relevent info.
+    // As well when we have access to it, We'll want to include $enrolment_id 
+    // in this hash for extra-good unqiueness but right now we're dynamically 
+    // generating them (should we just not maybe?) which 
+    // would break this(?), so just leaving it out for the time being. I think the 
+    // data included does a good enough job for now. Two identical records coming 
+    // through is enough of an edge case and wouldn't really have an adverse
+    // effect anyhow.
     $hash_content = $record_date_created . $course_id . $class_code . $enrolment_status . $user_guid . $user_email;
     $hash = hash('sha256', $hash_content);
-
+    // This is expensive part of doing it this way where we touch the database  
+    // for every single record in the feed, but it's probably the least expensive 
+    // but verifyable method that we can come up with; certainly less expensive
+    // than updating each record with a callback.
     $hashcheck = $DB->get_record('local_psaelmsync_logs', ['sha256hash' => $hash], '*', IGNORE_MULTIPLE);
 
     // Does the hash exist in the table? If so we want to skip this record as 
-    // we've already processed it.
+    // we've already processed it, but still counting it as we go.
     if ($hashcheck) {
-        return;
+        return 'Skipped';
     }
 
     // If there's no course with this IDNumber (note: not the Moodle course ID 
@@ -162,13 +179,22 @@ function process_enrolment_record($record, $apiurl) {
 
     // Check if user exists by GUID     .
     if ($user = $DB->get_record('user', array('idnumber' => $user_guid),'*')) {
+
         $user_id = $user->id;
+
     } else {
         // Attempt to create a new user, handle any exceptions gracefully.
         try {
+
             $user = create_user($user_first_name, $user_last_name, $user_email, $user_guid);
             $user_id = $user->id;
+
         } catch (Exception $e) {
+
+            // #TODO do an additional lookup at this point to see if the provided email 
+            // exists and if it does send that account info along as well as the issue
+            // is likely a GUID change.
+
             // Log the error
             log_record($record_id, 
                         $apiurl, 
@@ -184,6 +210,7 @@ function process_enrolment_record($record, $apiurl) {
                         $user_guid, 
                         'User creation failed',
                         'error');
+            
             // Send an email notification
             send_failure_notification($user_first_name, $user_last_name, $user_email, $e->getMessage());
 
@@ -303,7 +330,7 @@ function suspend_user_in_course($user_id, $course_id) {
 
 function send_welcome_email($user, $course) {
     $subject = "Welcome to {$course->fullname}";
-    $message = "Dear {$user->firstname} {$user->lastname},\n\nYou have been enrolled in the course '{$course->fullname}'.\n\nBest regards,\nMoodle Team";
+    $message = "Dear {$user->firstname} {$user->lastname},\n\nYou have been enrolled in the course '{$course->fullname}'.\n\n'{$course->id}'.\n\nBest regards,\nPSA Learning Centre";
 
     email_to_user($user, core_user::get_support_user(), $subject, $message);
 }
@@ -337,10 +364,12 @@ function update_api_processed_status($record_id) {
 function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
     global $DB;
 
-    if (!$course = $DB->get_record('course', array('id' => $course_id), 'fullname')) {
-        $coursefullname = 'Not found!';
-    } else {
-        $coursefullname = $course->fullname;
+    // Ensure course_id is valid before lookup
+    $coursefullname = 'Not found!';
+    if (!empty($course_id) && is_numeric($course_id)) {
+        if ($course = $DB->get_record('course', array('id' => $course_id), 'fullname')) {
+            $coursefullname = $course->fullname;
+        }
     }
 
     $log = new stdClass();
@@ -383,7 +412,7 @@ function send_failure_notification($first_name, $last_name, $email, $error_messa
         
         // Create a dummy user object for sending the email
         $dummyuser = new stdClass();
-        $dummyuser->email = 'noreply@example.com';
+        $dummyuser->email = 'noreply-psalssync@gov.bc.ca';
         $dummyuser->firstname = 'System';
         $dummyuser->lastname = 'Notifier';
         $dummyuser->id = -99; // Dummy user id
@@ -400,6 +429,65 @@ function send_failure_notification($first_name, $last_name, $email, $error_messa
             $recipient->lastname = 'User';
             
             // Send the email
+            email_to_user($recipient, $dummyuser, $subject, $message);
+        }
+    }
+}
+
+function check_last_enrolment_or_suspend($notificationhours) {
+    global $DB;
+
+    // Calculate the threshold time.
+    $threshold_time = time() - ($notificationhours * 3600);
+
+    // Check if the current time is between 6 AM and 6 PM on a weekday.
+    $current_time = time();
+    $day_of_week = date('N', $current_time); // 1 (for Monday) through 7 (for Sunday)
+    $hour_of_day = date('G', $current_time); // 0 through 23
+
+    if ($day_of_week >= 6 || $hour_of_day < 6 || $hour_of_day >= 18) {
+        // Do not send notifications outside of 6 AM - 6 PM, Monday to Friday.
+        return;
+    }
+
+    // Query the last enrolment or suspend record.
+    $last_action = $DB->get_record_sql("
+        SELECT MAX(timestamp) AS lasttime
+        FROM {local_psaelmsync_logs}
+        WHERE action IN ('enrolled', 'suspended')
+    ");
+
+    if ($last_action && $last_action->lasttime < $threshold_time) {
+        // If the last action was before the threshold, send a notification.
+        send_inactivity_notification($notificationhours);
+    }
+}
+
+function send_inactivity_notification($notificationhours) {
+    global $CFG;
+
+    $admin_emails = get_config('local_psaelmsync', 'notificationemails');
+    
+    if (!empty($admin_emails)) {
+        $emails = explode(',', $admin_emails);
+        $subject = "PSA Enrol Sync Inactivity Notification";
+        $message = "No enrolment or suspension records have been processed in the last {$notificationhours} hours. Please check the system.";
+
+        $dummyuser = new stdClass();
+        $dummyuser->email = 'noreply-psalssync@gov.bc.ca';
+        $dummyuser->firstname = 'System';
+        $dummyuser->lastname = 'Notifier';
+        $dummyuser->id = -99;
+
+        foreach ($emails as $admin_email) {
+            $admin_email = trim($admin_email);
+
+            $recipient = new stdClass();
+            $recipient->email = $admin_email;
+            $recipient->id = -99;
+            $recipient->firstname = 'Admin';
+            $recipient->lastname = 'User';
+
             email_to_user($recipient, $dummyuser, $subject, $message);
         }
     }

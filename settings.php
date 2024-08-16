@@ -27,6 +27,11 @@ if ($hassiteconfig) {
         get_string('datefilterminutes', 'local_psaelmsync'), 
         get_string('datefilterminutes_desc', 'local_psaelmsync'), 
         120, PARAM_INT));
+    
+    $settings->add(new admin_setting_configtext('local_psaelmsync/notificationhours', 
+        get_string('notificationhours', 'local_psaelmsync'), 
+        get_string('notificationhours_desc', 'local_psaelmsync'), 
+        1, PARAM_INT));
 
     $settings->add(new admin_setting_configtext('local_psaelmsync/apiupdateurl', 
         get_string('apiupdateurl', 'local_psaelmsync'), 

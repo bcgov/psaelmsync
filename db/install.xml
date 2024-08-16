@@ -34,6 +34,7 @@
             <FIELD NAME="enrolcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many enrol records were processed"/>
             <FIELD NAME="suspendcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many suspend records were processed"/>
             <FIELD NAME="errorcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many errors happened?"/>
+            <FIELD NAME="skippedcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many records were skipped because we've looked at it before?"/>
         </FIELDS>
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
