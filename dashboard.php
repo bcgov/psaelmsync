@@ -15,8 +15,6 @@ $PAGE->set_heading(get_string('logs', 'local_psaelmsync'));
 
 echo $OUTPUT->header();
 
-$apiurl = get_config('local_psaelmsync', 'apiurl');
-
 // SQL to get the most recent record
 $sql = "SELECT * FROM {local_psaelmsync_runs} ORDER BY endtime DESC LIMIT 10";
 // Get the most recent record
@@ -26,7 +24,6 @@ $lastruns = $DB->get_records_sql($sql);
     <div class="col-md-7">
         <div class="nav nav-pills p-2 bg-light rounded-lg">
             <a class="nav-link" href="/admin/settings.php?section=local_psaelmsync">Settings</a>
-            <a class="nav-link" href="<?= $apiurl ?>" target="_blank">Enrolment Endpoint</a>
             <a class="nav-link" href="/local/psaelmsync/trigger_sync.php">Manually trigger intake</a>
         </div>
     </div>
@@ -38,7 +35,7 @@ $lastruns = $DB->get_records_sql($sql);
             </p>
             <?php foreach($lastruns as $run): ?>
             <?php
-            if(!empty($run->enrolcount) || !empty($run->enrolcount)):
+            if(!empty($run->enrolcount) || !empty($run->enrolcount) || !empty($run->errorcount)):
             $start = (int) $run->starttime / 1000;
             $end = (int) $run->endtime / 1000;
             ?>
@@ -51,6 +48,7 @@ $lastruns = $DB->get_records_sql($sql);
                 <div>
                     Enrolments: <span class="badge badge-primary"><?= $run->enrolcount ?></span>
                     Drops: <span class="badge badge-primary"><?= $run->suspendcount ?></span>
+                    Errors: <span class="badge badge-primary"><?= $run->errorcount ?></span>
                 </div>
             </div>
             <?php endif ?>

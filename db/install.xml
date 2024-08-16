@@ -33,6 +33,7 @@
             <FIELD NAME="recordcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many records were processed"/>
             <FIELD NAME="enrolcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many enrol records were processed"/>
             <FIELD NAME="suspendcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many suspend records were processed"/>
+            <FIELD NAME="errorcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many errors happened?"/>
         </FIELDS>
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
