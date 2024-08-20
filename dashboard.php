@@ -46,9 +46,18 @@ $lastruns = $DB->get_records_sql($sql);
                     </a>
                 </div>
                 <div>
+                    <?php if(!empty($run->enrolcount)): ?>
                     Enrolments: <span class="badge badge-primary"><?= $run->enrolcount ?></span>
+                    <?php endif ?>
+                    <?php if(!empty($run->suspendcount)): ?>
                     Drops: <span class="badge badge-primary"><?= $run->suspendcount ?></span>
-                    Errors: <span class="badge badge-primary"><?= $run->errorcount ?></span>
+                    <?php endif ?>
+                    <?php if(!empty($run->errorcount)): ?>
+                    Errors: <span class="badge badge-danger"><?= $run->errorcount ?></span>
+                    <?php endif ?>
+                    <?php if(!empty($run->skippedcount)): ?>
+                    Skipped: <span class="badge badge-primary"><?= $run->skippedcount ?></span>
+                    <?php endif ?>
                 </div>
             </div>
             <?php endif ?>
