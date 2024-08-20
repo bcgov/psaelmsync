@@ -150,7 +150,8 @@ function process_enrolment_record($record, $apiurl) {
     // Does the hash exist in the table? If so we want to skip this record as 
     // we've already processed it, but still counting it as we go.
     if ($hashcheck) {
-        return 'Skipped';
+        $s = 'Skipped';
+        return $s;
     }
 
     // If there's no course with this IDNumber (note: not the Moodle course ID 
