@@ -16,9 +16,11 @@ $PAGE->set_heading(get_string('logs', 'local_psaelmsync'));
 echo $OUTPUT->header();
 
 // SQL to get the most recent record
-$sql = "SELECT * FROM {local_psaelmsync_runs} ORDER BY endtime DESC LIMIT 10";
+$sql = "SELECT * FROM {local_psaelmsync_runs} WHERE enrolcount > 0 OR suspendcount > 0 OR errorcount > 0 ORDER BY endtime DESC LIMIT 10";
 // Get the most recent record
 $lastruns = $DB->get_records_sql($sql);
+
+
 ?>
 <div class="row mb-2">
     <div class="col-md-7">
@@ -35,7 +37,6 @@ $lastruns = $DB->get_records_sql($sql);
             </p>
             <?php foreach($lastruns as $run): ?>
             <?php
-            if(!empty($run->enrolcount) || !empty($run->enrolcount) || !empty($run->errorcount)):
             $start = (int) $run->starttime / 1000;
             $end = (int) $run->endtime / 1000;
             ?>
@@ -60,7 +61,6 @@ $lastruns = $DB->get_records_sql($sql);
                     <?php endif ?>
                 </div>
             </div>
-            <?php endif ?>
             <?php endforeach ?>
         </details>
     </div>
