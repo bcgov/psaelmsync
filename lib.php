@@ -47,7 +47,7 @@ function local_psaelmsync_sync() {
     // Ensure that we're sorting the data by date_created in ascending order.
     // How performant is this? Can we not just rely on the URL filter being
     // sorted in the right order? Or do we need this overhead?
-    usort($data['records'], function ($a, $b) {
+    usort($data['value'], function ($a, $b) {
         return strtotime($a['date_created']) - strtotime($b['date_created']);
     });
     $typecounts = [];
