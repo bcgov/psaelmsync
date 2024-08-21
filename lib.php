@@ -132,7 +132,7 @@ function process_enrolment_record($record, $apiurl) {
     
     // Until we can get actual unique IDs in cdata, we need to create a unique 
     // ID here by hashing the relevent info.
-    // As well when we have access to it, We'll want to include $enrolment_id 
+    // As well, when we have access to it, we'll want to include $enrolment_id 
     // in this hash for extra-good unqiueness but right now we're dynamically 
     // generating them (should we just not maybe?) which 
     // would break this(?), so just leaving it out for the time being. I think the 
@@ -275,7 +275,8 @@ function create_user($first_name, $last_name, $email, $guid) {
 
     $user = new stdClass();
     $user->auth = 'manual';
-    $uname = strtolower($first_name.'.'.$last_name);
+    $ehandle = strstr($email, '@', true);
+    $uname = strtolower($ehandle);
     $user->username = $uname;
     $user->mnethostid = 1;
     $user->password = hash_internal_user_password('Chang3m3Please!');
