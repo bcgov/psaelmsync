@@ -20,10 +20,7 @@ function local_psaelmsync_sync() {
     }
     $mins = '-' . $datefilter . ' minutes';
     $time_minus_mins = date('Y-m-d H:i:s', strtotime($mins));
-    // CData format for date filter is different than mock. Here's the CData format:
-    // $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $time_minus_mins .'%27';
-    // But here's the mock format:
-    $apiurlfiltered = $apiurl . '&filter=date_created,gt,' . urlencode($time_minus_mins);
+    $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $time_minus_mins .'%27';
 
     // Make API call.
     $curl = new curl();
