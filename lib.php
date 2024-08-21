@@ -25,7 +25,7 @@ function local_psaelmsync_sync() {
     // Make API call.
     $curl = new curl();
     $options = array(
-        'CURLOPT_HTTPHEADER' => array("Authorization: Bearer $apitoken"),
+        'CURLOPT_HTTPHEADER' => array('x-cdata-authtoken: ' . $apitoken),
     );
     $response = $curl->get($apiurlfiltered, $options);
 
