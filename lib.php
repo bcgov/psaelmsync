@@ -56,7 +56,8 @@ function local_psaelmsync_sync() {
     $suspendcount = 0;
     $errorcount = 0;
     $skippedcount = 0;
-    foreach ($data['records'] as $record) {
+    
+    foreach ($data['value'] as $record) {
         $recordcount++;
         // Process each record. Returns the enrolment_type for logging
         $action = process_enrolment_record($record,$apiurlfiltered);
