@@ -26,7 +26,7 @@ function local_psaelmsync_sync() {
     // Make API call.
     $curl = new curl();
     $options = array(
-        'httpheader' => array('x-cdata-authtoken: ' . $apitoken), // Use the string 'httpheader' instead of CURLOPT_HTTPHEADER
+        'httpheader' => array('x-cdata-authtoken: ' . $apitoken),
     );
     $response = $curl->get($apiurlfiltered, $options);
 
@@ -329,14 +329,7 @@ function suspend_user_in_course($user_id, $course_id) {
 
 function send_welcome_email($user, $course) {
     $subject = "Welcome to {$course->fullname}";
-    // $message = "Dear {$user->firstname} {$user->lastname},\n\nYou have been enrolled in the course '{$course->fullname}'.\n\n'{$course->id}'.\n\nBest regards,\nPSA Learning Centre";
-    $message = <<<EMAIL
-            Hello $user->firstname $user->lastname,\n\n
-            You have been enrolled in the course "$course->fullname".\n\n
-            https://learning.gww.gov.bc.ca/course/view.php?id=$course->id \n\n
-            Best regards,\n
-            PSA Learning Centre
-    EMAIL;
+    $message = "Dear {$user->firstname} {$user->lastname},\n\nYou have been enrolled in the course '{$course->fullname}'.\n\n'{$course->id}'.\n\nBest regards,\nPSA Learning Centre";
 
     email_to_user($user, core_user::get_support_user(), $subject, $message);
 }
@@ -344,27 +337,27 @@ function send_welcome_email($user, $course) {
 function update_api_processed_status($record_id) {
     global $DB;
     
-    $apiupdateurl = get_config('local_psaelmsync', 'apiupdateurl');
-    $apiupdatetoken = get_config('local_psaelmsync', 'apiupdatetoken');
-    $callbackurl = $apiupdateurl . $record_id;
-    $ch = curl_init($callbackurl);
-    $data = array(
-        'processed' => 1
-    );
-    $jsonData = json_encode($data);
-    $options = array(
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CUSTOMREQUEST => "PUT",
-        CURLOPT_POSTFIELDS => $jsonData,
-        CURLOPT_HTTPHEADER => array(
-            "Authorization: Bearer " . $apiupdatetoken,
-            "Content-Type: application/json",
-            "Content-Length: " . strlen($jsonData)
-        )
-    );
-    curl_setopt_array($ch, $options);
-    $response = curl_exec($ch);
-    curl_close($ch);
+    // $apiupdateurl = get_config('local_psaelmsync', 'apiupdateurl');
+    // $apiupdatetoken = get_config('local_psaelmsync', 'apiupdatetoken');
+    // $callbackurl = $apiupdateurl . $record_id;
+    // $ch = curl_init($callbackurl);
+    // $data = array(
+    //     'processed' => 1
+    // );
+    // $jsonData = json_encode($data);
+    // $options = array(
+    //     CURLOPT_RETURNTRANSFER => true,
+    //     CURLOPT_CUSTOMREQUEST => "PUT",
+    //     CURLOPT_POSTFIELDS => $jsonData,
+    //     CURLOPT_HTTPHEADER => array(
+    //         "Authorization: Bearer " . $apiupdatetoken,
+    //         "Content-Type: application/json",
+    //         "Content-Length: " . strlen($jsonData)
+    //     )
+    // );
+    // curl_setopt_array($ch, $options);
+    // $response = curl_exec($ch);
+    // curl_close($ch);
 }
 
 function log_record($record_id, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
