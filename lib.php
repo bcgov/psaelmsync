@@ -25,11 +25,10 @@ function local_psaelmsync_sync() {
 
     // Make API call.
     $curl = new curl();
-    $curl->setopt(array(
-        CURLOPT_HTTPHEADER => array('x-cdata-authtoken: ' . $apitoken),
-    ));
-
-    $response = $curl->get($apiurlfiltered);
+    $options = array(
+        'httpheader' => array('x-cdata-authtoken: ' . $apitoken), // Use the string 'httpheader' instead of CURLOPT_HTTPHEADER
+    );
+    $response = $curl->get($apiurlfiltered, $options);
 
 
     if ($curl->get_errno()) {
@@ -40,7 +39,7 @@ function local_psaelmsync_sync() {
     $data = json_decode($response, true);
 
     if (empty($data)) {
-        mtrace('PSA Enrol Sync: No data received from API: ' . print_r($response));
+        mtrace('PSA Enrol Sync: No data received from API: ' . print_r($response, true));
         return;
     }
 
