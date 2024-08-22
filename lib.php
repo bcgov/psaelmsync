@@ -29,6 +29,7 @@ function local_psaelmsync_sync() {
     );
     $response = $curl->get($apiurlfiltered, $options);
 
+
     if ($curl->get_errno()) {
         mtrace('PSA Enrol Sync: API request failed: ' . $apiurlfiltered);
         return;
@@ -37,7 +38,7 @@ function local_psaelmsync_sync() {
     $data = json_decode($response, true);
 
     if (empty($data)) {
-        mtrace('PSA Enrol Sync: No data received from API.');
+        mtrace('PSA Enrol Sync: No data received from API: ' . $response);
         return;
     }
 
