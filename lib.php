@@ -20,14 +20,16 @@ function local_psaelmsync_sync() {
     }
     $mins = '-' . $datefilter . ' minutes';
     $time_minus_mins = date('Y-m-d H:i:s', strtotime($mins));
-    $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $time_minus_mins .'%27';
+    $encoded_time = urlencode($time_minus_mins);
+    $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $encoded_time .'%27';
 
     // Make API call.
     $curl = new curl();
-    $options = array(
-        'CURLOPT_HTTPHEADER' => array('x-cdata-authtoken: ' . $apitoken),
-    );
-    $response = $curl->get($apiurlfiltered, $options);
+    $curl->setopt(array(
+        CURLOPT_HTTPHEADER => array('x-cdata-authtoken: ' . $apitoken),
+    ));
+
+    $response = $curl->get($apiurlfiltered);
 
 
     if ($curl->get_errno()) {
