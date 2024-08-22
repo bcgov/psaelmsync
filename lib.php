@@ -19,19 +19,25 @@ function local_psaelmsync_sync() {
         mtrace('PSA Enrol Sync: API URL or Token not set.');
         return;
     }
+    // Setup API Url with a date filter that only pulls in the records from N minutes ago
     $mins = '-' . $datefilter . ' minutes';
     $time_minus_mins = date('Y-m-d H:i:s', strtotime($mins));
     $encoded_time = urlencode($time_minus_mins);
     $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $encoded_time .'%27';
 
     // Make API call.
-    $curl = new curl();
     $options = array(
-        'httpheader' => array('x-cdata-authtoken: ' . $apitoken),
+        'RETURNTRANSFER' => 1,
+        'HEADER' => 0,
+        'FAILONERROR' => 1,
     );
+    $header = array('x-cdata-authtoken: ' . $apitoken);
+    $curl = new curl();
+    $curl->setHeader($header);
     $response = $curl->get($apiurlfiltered, $options);
+    // { "error": { "code": "rsb:restrict", "message": "Authentication is required for access to this resource. " } }
 
-    mtrace('PSALS Sync: ' . print_r($response, true));
+    mtrace('PSALS Sync: ' . print_r($response, true) . ' options: ' . print_r($options, true) . ' encoded time: ' . $encoded_time);
 
     if ($curl->get_errno()) {
         mtrace('PSA Enrol Sync: API request failed: ' . $apiurlfiltered);
