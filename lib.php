@@ -279,8 +279,7 @@ function create_user($first_name, $last_name, $email, $guid) {
 
     $user = new stdClass();
     $user->auth = 'manual';
-    $ehandle = strstr($email, '@', true);
-    $uname = strtolower($ehandle);
+    $uname = strtolower($email);
     $user->username = $uname;
     $user->mnethostid = 1;
     $user->password = hash_internal_user_password('Chang3m3Please!');
@@ -446,6 +445,7 @@ function check_last_enrolment_or_suspend($notificationhours) {
     if ($last_action && $last_action->lasttime < $threshold_time) {
         // If the last action was before the threshold, send a notification.
         send_inactivity_notification($notificationhours);
+
     }
 }
 
