@@ -7,8 +7,6 @@ function local_psaelmsync_sync() {
 
     $runlogstarttime = floor(microtime(true) * 1000);
 
-    // https://analytics-testapi.psa.gov.bc.ca/apiserver/api.rsc/Datamart_ELM_Course_Enrollment_info
-    // https://analytics-testapi.psa.gov.bc.ca/apiserver/api.rsc/Datamart_ELM_Course_Enrollment_info?%24orderby=date_created+desc&%24filter=date_created+gt+%272024-08-13+14%3A49%3A56%27 
     // Fetch API URL and token from config.
     $apiurl = get_config('local_psaelmsync', 'apiurl');
     $apitoken = get_config('local_psaelmsync', 'apitoken');
@@ -35,9 +33,6 @@ function local_psaelmsync_sync() {
     $curl = new curl();
     $curl->setHeader($header);
     $response = $curl->get($apiurlfiltered, $options);
-    // { "error": { "code": "rsb:restrict", "message": "Authentication is required for access to this resource. " } }
-
-    mtrace('PSALS Sync: ' . print_r($response, true) . ' options: ' . print_r($options, true) . ' encoded time: ' . $encoded_time);
 
     if ($curl->get_errno()) {
         mtrace('PSA Enrol Sync: API request failed: ' . $apiurlfiltered);
@@ -52,11 +47,15 @@ function local_psaelmsync_sync() {
     }
 
     // Ensure that we're sorting the data by date_created in ascending order.
-    // How performant is this? Can we not just rely on the URL filter being
-    // sorted in the right order? Or do we need this overhead?
+    // This isn't strictly necessary as the API call is also sorting this way,
+    // but it is important that we process them in chronological order so we 
+    // double-do it here. Removing this would be an easy optimization if that
+    // becomes necessary.
     usort($data['value'], function ($a, $b) {
         return strtotime($a['date_created']) - strtotime($b['date_created']);
     });
+
+    // Set up variables for type count logging.
     $typecounts = [];
     $recordcount = 0;
     $enrolcount = 0;
@@ -64,6 +63,7 @@ function local_psaelmsync_sync() {
     $errorcount = 0;
     $skippedcount = 0;
     
+    // This is the primary loop where we start to look at each record
     foreach ($data['value'] as $record) {
         $recordcount++;
         // Process each record. Returns the enrolment_type for logging
@@ -71,7 +71,7 @@ function local_psaelmsync_sync() {
         $typecounts[] = $action;
     }
 
-    // Loop through to pull out how many enrols and drops respectively.
+    // Loop through to pull out how many enrols and drops etc. respectively.
     foreach($typecounts as $t) {
         if($t == 'Enrol') $enrolcount++;
         if($t == 'Suspend') $suspendcount++;
@@ -95,7 +95,7 @@ function local_psaelmsync_sync() {
     // Check for the time since the last enrolment or suspend. 
     // If it's been more than N hours then send an email to the 
     // admin list notifying them that the bridge might be blocked
-    // on the ELM.
+    // on the ELM side.
     check_last_enrolment_or_suspend($notificationhours);
     
 
@@ -124,10 +124,11 @@ function process_enrolment_record($record) {
      */
     
     // CData doesn't currently supply a unique record ID yet, so we just make one up.
+    // In milliseconds.
     $record_id = floor(microtime(true) * 1000); // (int) $record['record_id'];
     // In current state the plan is to use the USER_STATE field to hold the 
     // enrolment ID. At some point hopefully we'll get away from the spaghetti 
-    // that is our field mapping.
+    // that is our field mapping. In the meantime, we're just faking an ID.
     $enrolment_id = floor(microtime(true) * 1000);// $record['USER_STATE'];
     // The rest map to CData fields
     $record_date_created = $record['date_created'];
@@ -139,11 +140,10 @@ function process_enrolment_record($record) {
     $user_email = $record['EMAIL'];
     $user_guid = $record['GUID'];
     
-    // Until we can get actual unique IDs in cdata, we need to create a unique 
-    // ID here by hashing the relevent info.
-    // As well, when we have access to it, we'll want to include $enrolment_id 
-    // in this hash for extra-good unqiueness but right now we're dynamically 
-    // generating them (should we just not maybe?) which 
+    // We need to create a unique ID here by hashing the relevent info.
+    // When we have access to them, we'll want to include $enrolment_id and 
+    // record_id in this hash for extra-good unqiueness but right now we're 
+    // dynamically generating them (should we just not maybe?) which 
     // would break this(?), so just leaving it out for the time being. I think the 
     // data included does a good enough job for now. Two identical records coming 
     // through is enough of an edge case and wouldn't really have an adverse
@@ -250,6 +250,9 @@ function process_enrolment_record($record) {
     } elseif ($enrolment_status == 'Suspend') {
         // Suspend the user in the course.
         suspend_user_in_course($user_id, $course->id);
+
+        // #TODO send a drop email?? ya!
+
         log_record($record_id, 
                     $hash, 
                     $record_date_created, 
@@ -264,10 +267,6 @@ function process_enrolment_record($record) {
                     'suspended', 
                     'Success');
     }
-
-    // Callback API with processed status.
-    // DISABLED for now as we're now checking for hashes, but this still might be a good approach.
-    // update_api_processed_status($record_id);
     
     // We return the enrolment_status so that we can count enrols and suspends
     // when we log the run.
@@ -337,35 +336,16 @@ function suspend_user_in_course($user_id, $course_id) {
 
 function send_welcome_email($user, $course) {
     $subject = "Welcome to {$course->fullname}";
-    $message = "Dear {$user->firstname} {$user->lastname},\n\nYou have been enrolled in the course '{$course->fullname}'.\n\n'{$course->id}'.\n\nBest regards,\nPSA Learning Centre";
+    // $message = "Dear {$user->firstname} {$user->lastname},\n\nYou have been enrolled in the course '{$course->fullname}'.\n\n'{$course->id}'.\n\nBest regards,\nPSA Learning Centre";
+    $message = <<<EMAIL
+            Hello $user->firstname $user->lastname,\n\n
+            You have been enrolled in the course "$course->fullname".\n\n
+            https://learning.gww.gov.bc.ca/course/view.php?id=$course->id \n\n
+            Best regards,\n
+            PSA Learning Centre
+    EMAIL;
 
     email_to_user($user, core_user::get_support_user(), $subject, $message);
-}
-
-function update_api_processed_status($record_id) {
-    global $DB;
-    
-    // $apiupdateurl = get_config('local_psaelmsync', 'apiupdateurl');
-    // $apiupdatetoken = get_config('local_psaelmsync', 'apiupdatetoken');
-    // $callbackurl = $apiupdateurl . $record_id;
-    // $ch = curl_init($callbackurl);
-    // $data = array(
-    //     'processed' => 1
-    // );
-    // $jsonData = json_encode($data);
-    // $options = array(
-    //     CURLOPT_RETURNTRANSFER => true,
-    //     CURLOPT_CUSTOMREQUEST => "PUT",
-    //     CURLOPT_POSTFIELDS => $jsonData,
-    //     CURLOPT_HTTPHEADER => array(
-    //         "Authorization: Bearer " . $apiupdatetoken,
-    //         "Content-Type: application/json",
-    //         "Content-Length: " . strlen($jsonData)
-    //     )
-    // );
-    // curl_setopt_array($ch, $options);
-    // $response = curl_exec($ch);
-    // curl_close($ch);
 }
 
 function log_record($record_id, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
