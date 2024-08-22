@@ -38,7 +38,7 @@ function local_psaelmsync_sync() {
     $data = json_decode($response, true);
 
     if (empty($data)) {
-        mtrace('PSA Enrol Sync: No data received from API: ' . $response);
+        mtrace('PSA Enrol Sync: No data received from API: ' . print_r($response));
         return;
     }
 
@@ -58,7 +58,7 @@ function local_psaelmsync_sync() {
     foreach ($data['value'] as $record) {
         $recordcount++;
         // Process each record. Returns the enrolment_type for logging
-        $action = process_enrolment_record($record,$apiurlfiltered);
+        $action = process_enrolment_record($record);
         $typecounts[] = $action;
     }
 
@@ -72,6 +72,7 @@ function local_psaelmsync_sync() {
     // Log the end of the run time.
     $runlogendtime = floor(microtime(true) * 1000);
     $log = [
+            'apiurl' => $apiurlfiltered, 
             'starttime' => $runlogstarttime, 
             'endtime' => $runlogendtime, 
             'recordcount' => $recordcount,
@@ -91,7 +92,7 @@ function local_psaelmsync_sync() {
 
 }
 
-function process_enrolment_record($record, $apiurl) {
+function process_enrolment_record($record) {
     
     global $DB;
     /**
@@ -160,7 +161,6 @@ function process_enrolment_record($record, $apiurl) {
         // We haven't done a user lookup yet so 
         $user_id = 0;
         log_record($record_id, 
-                    $apiurl, 
                     $hash, 
                     $record_date_created, 
                     $course_id, 
@@ -197,7 +197,6 @@ function process_enrolment_record($record, $apiurl) {
 
             // Log the error
             log_record($record_id, 
-                        $apiurl, 
                         $hash, 
                         $record_date_created, 
                         $course_id, 
@@ -226,7 +225,6 @@ function process_enrolment_record($record, $apiurl) {
         send_welcome_email($user, $course);
 
         log_record($record_id, 
-                    $apiurl, 
                     $hash, 
                     $record_date_created, 
                     $course->id, 
@@ -244,7 +242,6 @@ function process_enrolment_record($record, $apiurl) {
         // Suspend the user in the course.
         suspend_user_in_course($user_id, $course->id);
         log_record($record_id, 
-                    $apiurl, 
                     $hash, 
                     $record_date_created, 
                     $course->id, 
@@ -302,7 +299,7 @@ function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $recor
         $instance = $DB->get_record('enrol', array('courseid' => $course_id, 'enrol' => 'manual'), '*', MUST_EXIST);
         $enrol->enrol_user($instance, $user_id, $instance->roleid);
 
-        // Store the custom enrolment ID in the new table.
+        // Store the custom enrolment ID in the enrol table.
         $custom_enrolment = new stdClass();
         $custom_enrolment->userid = $user_id;
         $custom_enrolment->record_id = $record_id;
@@ -369,7 +366,7 @@ function update_api_processed_status($record_id) {
     curl_close($ch);
 }
 
-function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
+function log_record($record_id, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
     global $DB;
 
     // Ensure course_id is valid before lookup
@@ -382,7 +379,6 @@ function log_record($record_id, $apiurl, $hash, $record_date_created, $course_id
 
     $log = new stdClass();
     $log->record_id = $record_id;
-    $log->apiurl = $apiurl;
     $log->sha256hash = $hash;
     $log->record_date_created = $record_date_created;
     $log->course_id = $course_id;

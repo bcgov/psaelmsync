@@ -6,7 +6,6 @@
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
             <FIELD NAME="sha256hash" TYPE="BINARY" LENGTH="32" NOTNULL="true" COMMENT="A hash of $record_date_created . $course_id . $enrolment_status . $user_guid . $user_email"/>
             <FIELD NAME="record_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Unique record ID"/>
-            <FIELD NAME="apiurl" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Exact URL called on this run."/>
             <FIELD NAME="record_date_created" TYPE="char" LENGTH="100" NOTNULL="true" COMMENT="Date record created in CData"/>
             <FIELD NAME="course_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Course ID"/>
             <FIELD NAME="course_name" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Course Name"/>
@@ -28,6 +27,7 @@
     <TABLE NAME="local_psaelmsync_runs" COMMENT="Run logs for PSA ELM Sync plugin">
         <FIELDS>
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
+            <FIELD NAME="apiurl" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Exact URL called on this run."/>
             <FIELD NAME="starttime" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Time run started"/>
             <FIELD NAME="endtime" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Time run ended"/>
             <FIELD NAME="recordcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many records were processed"/>
