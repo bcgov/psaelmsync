@@ -8,6 +8,7 @@ function local_psaelmsync_sync() {
     $runlogstarttime = floor(microtime(true) * 1000);
 
     // https://analytics-testapi.psa.gov.bc.ca/apiserver/api.rsc/Datamart_ELM_Course_Enrollment_info
+    // https://analytics-testapi.psa.gov.bc.ca/apiserver/api.rsc/Datamart_ELM_Course_Enrollment_info?%24orderby=date_created+desc&%24filter=date_created+gt+%272024-08-13+14%3A49%3A56%27 
     // Fetch API URL and token from config.
     $apiurl = get_config('local_psaelmsync', 'apiurl');
     $apitoken = get_config('local_psaelmsync', 'apitoken');
@@ -30,6 +31,7 @@ function local_psaelmsync_sync() {
     );
     $response = $curl->get($apiurlfiltered, $options);
 
+    mtrace('PSALS Sync: ' . print_r($response, true));
 
     if ($curl->get_errno()) {
         mtrace('PSA Enrol Sync: API request failed: ' . $apiurlfiltered);
