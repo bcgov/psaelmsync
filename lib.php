@@ -216,7 +216,7 @@ function process_enrolment_record($record) {
                         $user_last_name, 
                         $user_email, 
                         $user_guid, 
-                        'User creation failed',
+                        $enrolment_status . ' - User creation failed',
                         'Error');
             
             // Send an email notification
