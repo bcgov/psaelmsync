@@ -446,7 +446,7 @@ function check_last_enrolment_or_suspend($notificationhours) {
     $last_action = $DB->get_record_sql("
         SELECT MAX(timestamp) AS lasttime
         FROM {local_psaelmsync_logs}
-        WHERE action IN ('enrolled', 'suspended')
+        WHERE action IN ('Enrol', 'Suspend')
     ");
 
     if ($last_action && $last_action->lasttime < $threshold_time) {
