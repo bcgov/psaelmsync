@@ -180,7 +180,7 @@ function process_enrolment_record($record) {
                     $user_last_name, 
                     $user_email, 
                     $user_guid, 
-                    'Course not found',
+                    $enrolment_status . ' - Course not found',
                     'Error');
         
         return;
@@ -252,6 +252,9 @@ function process_enrolment_record($record) {
         suspend_user_in_course($user_id, $course->id);
 
         // #TODO send a drop email?? ya!
+        // #TODO should we do a further lookup here and,
+        // if they're not enrolled in any other courses,
+        // go one step further and delete the whole account?
 
         log_record($record_id, 
                     $hash, 
