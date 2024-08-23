@@ -339,19 +339,27 @@ function suspend_user_in_course($user_id, $course_id) {
 function send_welcome_email($user, $course) {
     $subject = "Welcome to {$course->fullname}";
 
-    $message = <<<EMAIL
-            Hi $user->firstname,\n
-            You have been enrolled in $course->fullname.\n
-            Please click the following link, signing in using your IDIR credentials:\n
-            https://learning.gww.gov.bc.ca/course/view.php?id=$course->id\n
-            If you have any issues with the course materials, please submit an AskMyHR 
-            request at http://www.gov.bc.ca/myhr/contact and select one of the subcategories 
-            under "Learning Centre".\n\n
-            Regards,\n
-            PSA Moodle Team
+       // HTML version of the message
+    $html_message = <<<EMAIL
+       <p>Hi {$user->firstname},</p>
+       <p>You have been enrolled in <strong>{$course->fullname}</strong>.</p>
+       <p>Please click the following link, signing in using your IDIR credentials:</p>
+       <p><a href="https://learning.gww.gov.bc.ca/course/view.php?id={$course->id}" style="font-size: 18px;">Access the Course</a></p>
+       <p>If you have any issues with the course materials, please submit <a href="http://www.gov.bc.ca/myhr/contact">an AskMyHR request</a> and select one of the subcategories under "Learning Centre".</p>
+       <p>Regards,<br>PSA Moodle Team</p>
+   EMAIL;
+
+    $plaintext_message = <<<EMAIL
+        Hi $user->firstname,\n
+        You have been enrolled in $course->fullname.\n
+        Please click the following link, signing in using your IDIR credentials:\n
+        https://learning.gww.gov.bc.ca/course/view.php?id=$course->id\n
+        If you have any issues with the course materials, please submit an AskMyHR request at http://www.gov.bc.ca/myhr/contact and select one of the subcategories under "Learning Centre".\n\n
+        Regards,
+        PSA Moodle Team
     EMAIL;
 
-    email_to_user($user, core_user::get_support_user(), $subject, $message);
+    email_to_user($user, core_user::get_support_user(), $subject, $plain_message, $html);
 }
 
 function log_record($record_id, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
