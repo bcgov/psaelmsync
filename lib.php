@@ -181,7 +181,7 @@ function process_enrolment_record($record) {
                     $user_email, 
                     $user_guid, 
                     'Course not found',
-                    'error');
+                    'Error');
         
         return;
     }
@@ -217,7 +217,7 @@ function process_enrolment_record($record) {
                         $user_email, 
                         $user_guid, 
                         'User creation failed',
-                        'error');
+                        'Error');
             
             // Send an email notification
             send_failure_notification($user_first_name, $user_last_name, $user_email, $e->getMessage());
@@ -244,7 +244,7 @@ function process_enrolment_record($record) {
                     $user_last_name, 
                     $user_email, 
                     $user_guid, 
-                    'enrolled', 
+                    'Enrol', 
                     'Success');
 
     } elseif ($enrolment_status == 'Suspend') {
@@ -264,7 +264,7 @@ function process_enrolment_record($record) {
                     $user_last_name, 
                     $user_email, 
                     $user_guid, 
-                    'suspended', 
+                    'Suspend', 
                     'Success');
     }
     
