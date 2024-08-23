@@ -338,13 +338,17 @@ function suspend_user_in_course($user_id, $course_id) {
 
 function send_welcome_email($user, $course) {
     $subject = "Welcome to {$course->fullname}";
-    // $message = "Dear {$user->firstname} {$user->lastname},\n\nYou have been enrolled in the course '{$course->fullname}'.\n\n'{$course->id}'.\n\nBest regards,\nPSA Learning Centre";
+
     $message = <<<EMAIL
-            Hello $user->firstname $user->lastname,\n\n
-            You have been enrolled in the course "$course->fullname".\n\n
-            https://learning.gww.gov.bc.ca/course/view.php?id=$course->id \n\n
-            Best regards,\n
-            PSA Learning Centre
+            Hi $user->firstname,\n
+            You have been enrolled in $course->fullname.\n
+            Please click the following link, signing in using your IDIR credentials:\n
+            https://learning.gww.gov.bc.ca/course/view.php?id=$course->id\n
+            If you have any issues with the course materials, please submit an AskMyHR 
+            request at http://www.gov.bc.ca/myhr/contact and select one of the subcategories 
+            under "Learning Centre".\n\n
+            Regards,\n
+            PSA Moodle Team
     EMAIL;
 
     email_to_user($user, core_user::get_support_user(), $subject, $message);
