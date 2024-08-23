@@ -66,10 +66,6 @@ class observer {
                         $enrol_status = 'Complete';
                         $datecreated = date('Y-m-d h:i:s');
 
-                        // Setup the actual cURL call
-                        $apiurl = get_config('local_psaelmsync', 'completion_apiurl');
-                        $apitoken = get_config('local_psaelmsync', 'completion_apitoken');
-                        $ch = curl_init($apiurl);
                         // `COURSE_COMPLETE_DATE` varchar(100) NOT NULL,
                         // `COURSE_STATE` varchar(100) NOT NULL,
                         // `COURSE_IDENTIFIER` int(11) NOT NULL,
@@ -84,10 +80,16 @@ class observer {
                         // `date_deleted` datetime DEFAULT NULL,
                         // `date_updated` datetime DEFAULT NULL,
                         // prepare data to post
+                        // Setup the actual cURL call
+                        $apiurl = get_config('local_psaelmsync', 'completion_apiurl');
+                        $apitoken = get_config('local_psaelmsync', 'completion_apitoken');
+
+                        $ch = curl_init($apiurl);
+
                         $data = [
                             'COURSE_COMPLETE_DATE' => date('Y-m-d'),
                             'COURSE_STATE' => $enrol_status, 
-                            // 'ernolment_id' => (int) $elm_enrolment_id, 
+                            // 'enrolment_id' => (int) $elm_enrolment_id, 
                             'USER_STATE' => 'Active',
                             'USER_EFFECTIVE_DATE' => '2017-02-14',
                             'COURSE_IDENTIFIER' => (int) $courseidnumber, 
@@ -105,15 +107,15 @@ class observer {
                             CURLOPT_POST => true,
                             CURLOPT_POSTFIELDS => $jsonData,
                             CURLOPT_HTTPHEADER => array(
-                                "Authorization: Bearer " . $apitoken,
+                                "x-cdata-authtoken: " . $apitoken,
                                 "Content-Type: application/json",
                                 "Content-Length: " . strlen($jsonData)
                                 )
                             );
                         curl_setopt_array($ch, $options);
                         $response = curl_exec($ch);
-
                         curl_close($ch);
+
 
                         $log = [
                             'record_id' => $record_id,
