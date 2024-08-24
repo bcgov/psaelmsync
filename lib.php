@@ -359,7 +359,7 @@ function send_welcome_email($user, $course) {
         PSA Moodle Team
     EMAIL;
 
-    email_to_user($user, core_user::get_support_user(), $subject, $plain_message, $html_message);
+    email_to_user($user, core_user::get_support_user(), $subject, $plaintext_message, $html_message);
 }
 
 function log_record($record_id, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
