@@ -117,13 +117,16 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
     <div class="col-md-7">
 
-        <canvas id="runsChart"></canvas>
-
+        
         <details class="p-3">
             <summary>Intake run history</summary>
+            
+            <hr>
             <p>Runs where there was at least 1 enrolment or drop. Searching for a timestamp will show 
                 you records 2 minutes on either side of the given time.
             </p>
+            
+            <canvas id="runsChart"></canvas>
             
             <?php foreach($lastruns as $run): ?>
             <?php
