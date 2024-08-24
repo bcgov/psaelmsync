@@ -20,8 +20,32 @@ $sql = "SELECT * FROM {local_psaelmsync_runs} WHERE enrolcount > 0 OR suspendcou
 // Get the most recent record
 $lastruns = $DB->get_records_sql($sql);
 
+// Prepare data for Chart.js
+$chartData = [
+    'labels' => [],
+    'enrolments' => [],
+    'suspends' => [],
+    'errors' => []
+];
+
+foreach ($lastruns as $run) {
+    $start = (int) $run->starttime / 1000;
+    $chartData['labels'][] = date('Y-m-d H:i:s', $start);
+    $chartData['enrolments'][] = $run->enrolcount;
+    $chartData['suspends'][] = $run->suspendcount;
+    $chartData['errors'][] = $run->errorcount;
+}
+
+// Encode the data for use in JavaScript
+$chartDataJson = json_encode($chartData);
 
 ?>
+<!-- Chart.js Chart -->
+<div class="row mb-2">
+    <div class="col-md-12">
+        <canvas id="runsChart"></canvas>
+    </div>
+</div>
 <div class="row mb-2">
     <div class="col-md-7">
         <div class="nav nav-pills p-2 bg-light rounded-lg">
@@ -35,6 +59,7 @@ $lastruns = $DB->get_records_sql($sql);
             <p>Runs where there was at least 1 enrolment or drop. Searching for a timestamp will show 
                 you records 2 minutes on either side of the given time.
             </p>
+            
             <?php foreach($lastruns as $run): ?>
             <?php
             $start = (int) $run->starttime / 1000;
@@ -65,6 +90,8 @@ $lastruns = $DB->get_records_sql($sql);
         </details>
     </div>
 </div>
+
+
 
 <!-- Search Form -->
 <form method="get" action="dashboard.php" class="mb-3">
@@ -131,3 +158,71 @@ $table->pagesize($perpage, $totalrows);
 $table->out($perpage, true);
 
 echo $OUTPUT->footer();
+?>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var ctx = document.getElementById('runsChart').getContext('2d');
+    var chartData = <?= $chartDataJson ?>;
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [
+                {
+                    label: 'Enrolments',
+                    data: chartData.enrolments,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true
+                },
+                {
+                    label: 'Suspends',
+                    data: chartData.suspends,
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    fill: true
+                },
+                {
+                    label: 'Errors',
+                    data: chartData.errors,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            title: {
+                display: true,
+                text: 'Recent Runs Overview'
+            },
+            scales: {
+                xAxes: [{
+                    type: 'time',
+                    time: {
+                        unit: 'minute'
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Time'
+                    }
+                }],
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Count'
+                    },
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+});
+</script>
