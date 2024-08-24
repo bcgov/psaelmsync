@@ -40,12 +40,74 @@ foreach ($lastruns as $run) {
 $chartDataJson = json_encode($chartData);
 
 ?>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var ctx = document.getElementById('runsChart').getContext('2d');
+    var chartData = <?= $chartDataJson ?>;
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [
+                {
+                    label: 'Enrolments',
+                    data: chartData.enrolments,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true
+                },
+                {
+                    label: 'Suspends',
+                    data: chartData.suspends,
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    fill: true
+                },
+                {
+                    label: 'Errors',
+                    data: chartData.errors,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            title: {
+                display: true,
+                text: 'Recent Runs Overview'
+            },
+            scales: {
+                xAxes: [{
+                    type: 'time',
+                    time: {
+                        unit: 'minute'
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Time'
+                    }
+                }],
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Count'
+                    },
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+});
+</script>
 <!-- Chart.js Chart -->
-<div class="row mb-2">
-    <div class="col-md-12">
-        <canvas id="runsChart"></canvas>
-    </div>
-</div>
 <div class="row mb-2">
     <div class="col-md-7">
         <div class="nav nav-pills p-2 bg-light rounded-lg">
@@ -54,6 +116,9 @@ $chartDataJson = json_encode($chartData);
         </div>
     </div>
     <div class="col-md-7">
+
+        <canvas id="runsChart"></canvas>
+
         <details class="p-3">
             <summary>Intake run history</summary>
             <p>Runs where there was at least 1 enrolment or drop. Searching for a timestamp will show 
@@ -158,71 +223,3 @@ $table->pagesize($perpage, $totalrows);
 $table->out($perpage, true);
 
 echo $OUTPUT->footer();
-?>
-
-<!-- Include Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var ctx = document.getElementById('runsChart').getContext('2d');
-    var chartData = <?= $chartDataJson ?>;
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartData.labels,
-            datasets: [
-                {
-                    label: 'Enrolments',
-                    data: chartData.enrolments,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    fill: true
-                },
-                {
-                    label: 'Suspends',
-                    data: chartData.suspends,
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                    fill: true
-                },
-                {
-                    label: 'Errors',
-                    data: chartData.errors,
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    fill: true
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            title: {
-                display: true,
-                text: 'Recent Runs Overview'
-            },
-            scales: {
-                xAxes: [{
-                    type: 'time',
-                    time: {
-                        unit: 'minute'
-                    },
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Time'
-                    }
-                }],
-                yAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Count'
-                    },
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }]
-            }
-        }
-    });
-});
-</script>
