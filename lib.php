@@ -180,7 +180,7 @@ function process_enrolment_record($record) {
                     $user_last_name, 
                     $user_email, 
                     $user_guid, 
-                    $enrolment_status . ' - Course not found',
+                    'Course not found',
                     'Error');
         
         send_failure_notification('coursefail', $user_first_name, $user_last_name, $user_email, $course_id);
@@ -227,7 +227,7 @@ function process_enrolment_record($record) {
                         $user_last_name, 
                         $user_email, 
                         $user_guid, 
-                        $enrolment_status . ' - User creation failed',
+                        'User create failure',
                         'Error');
             
             // Send an email notification
