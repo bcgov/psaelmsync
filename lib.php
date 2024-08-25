@@ -202,9 +202,18 @@ function process_enrolment_record($record) {
 
         } catch (Exception $e) {
 
-            // #TODO do an additional lookup at this point to see if the provided email 
+            $error_message = $e->getMessage();
+
+            // Do an additional lookup at this point to see if the provided email 
             // exists and if it does send that account info along as well as the issue
             // is likely a GUID change.
+            if ($useremail = $DB->get_record('user', array('email' => $user_email),'*')) {
+                
+                $error_message = 'User email is associated with another profile.\n';
+                $error_message .= 'https://learning.gww.gov.bc.ca/user/view.php?id=' . $useremail->id . '\n';
+                $error_message .= 'This is likely a GUID change issue.';
+
+            }
 
             // Log the error
             log_record($record_id, 
@@ -222,7 +231,7 @@ function process_enrolment_record($record) {
                         'Error');
             
             // Send an email notification
-            send_failure_notification('userfail', $user_first_name, $user_last_name, $user_email, $e->getMessage());
+            send_failure_notification('userfail', $user_first_name, $user_last_name, $user_email, $error_message);
 
             // Return to skip further processing of this record.
             return;
