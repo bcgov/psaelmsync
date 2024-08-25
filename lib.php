@@ -360,6 +360,9 @@ function send_welcome_email($user, $course) {
         PSA Moodle Team
     EMAIL;
 
+    // Force HTML email regardless of user preference
+    $user->mailformat = 1; // Force HTML format
+
     email_to_user($user, core_user::get_support_user(), $subject, $plaintext_message, $html_message);
 }
 
