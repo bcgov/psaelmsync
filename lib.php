@@ -338,6 +338,7 @@ function suspend_user_in_course($user_id, $course_id) {
 }
 
 function send_welcome_email($user, $course) {
+    
     $subject = "Welcome to {$course->fullname}";
 
        // HTML version of the message
@@ -345,8 +346,8 @@ function send_welcome_email($user, $course) {
        <p>Hi {$user->firstname},</p>
        <p>You have been enrolled in <strong>{$course->fullname}</strong>.</p>
        <p>Please click the following link, signing in using your IDIR credentials:</p>
-       <p><a href="https://learning.gww.gov.bc.ca/course/view.php?id={$course->id}" style="font-size: 18px;">Access {$course->fullname} on PSA Moodle</a></p>
-       <p>If you have any issues with the course materials, please submit <a href="http://www.gov.bc.ca/myhr/contact">an AskMyHR request</a> and select one of the subcategories under "Learning Centre".</p>
+       <p><a href="https://learning.gww.gov.bc.ca/course/view.php?id={$course->id}" style="font-size: 20px;">Access this course on PSA Moodle</a></p>
+       <p>If you have any issues with the course materials, please <a href="http://www.gov.bc.ca/myhr/contact">submit an AskMyHR request</a> and select one of the subcategories under "Learning Centre".</p>
        <p>Regards,<br>PSA Moodle Team</p>
    EMAIL;
 
