@@ -165,7 +165,7 @@ function process_enrolment_record($record) {
 
     // If there's no course with this IDNumber (note: not the Moodle course ID 
     // but ELM's course ID), skip record. We want to log that this is happening 
-    // somehow; should probably send an email #TODO
+    // and send an email to the admin list.
     if (!$course = $DB->get_record('course', array('idnumber' => $course_id))) {
         // We haven't done a user lookup yet so 
         $user_id = 0;
@@ -183,6 +183,8 @@ function process_enrolment_record($record) {
                     $enrolment_status . ' - Course not found',
                     'Error');
         
+        send_failure_notification('coursefail', $user_first_name, $user_last_name, $user_email, $course_id);
+
         return;
     }
 
@@ -220,7 +222,7 @@ function process_enrolment_record($record) {
                         'Error');
             
             // Send an email notification
-            send_failure_notification($user_first_name, $user_last_name, $user_email, $e->getMessage());
+            send_failure_notification('userfail', $user_first_name, $user_last_name, $user_email, $e->getMessage());
 
             // Return to skip further processing of this record.
             return;
@@ -338,7 +340,7 @@ function suspend_user_in_course($user_id, $course_id) {
 }
 
 function send_welcome_email($user, $course) {
-    
+
     $subject = "Welcome to {$course->fullname}";
 
        // HTML version of the message
@@ -399,7 +401,7 @@ function log_record($record_id, $hash, $record_date_created, $course_id, $class_
 }
 
 // Function to send failure notification email
-function send_failure_notification($first_name, $last_name, $email, $error_message) {
+function send_failure_notification($type, $first_name, $last_name, $email, $error_message) {
     global $CFG;
 
     // Get the list of email addresses from admin settings
@@ -407,13 +409,27 @@ function send_failure_notification($first_name, $last_name, $email, $error_messa
     
     if (!empty($admin_emails)) {
         $emails = explode(',', $admin_emails);
-        $subject = "User Creation Failure Notification";
-        $message = "A failure occurred during user creation.\n\n";
-        $message .= "Details:\n";
-        $message .= "Name: {$first_name} {$last_name}\n";
-        $message .= "Email: {$email}\n";
-        $message .= "Error: {$error_message}\n\n";
-        $message .= "Please investigate the issue.";
+        if($type == 'userfail') {
+
+            $subject = "User Creation Failure Notification";
+            $message = "A failure occurred during user creation.\n\n";
+            $message .= "Details:\n";
+            $message .= "Name: {$first_name} {$last_name}\n";
+            $message .= "Email: {$email}\n";
+            $message .= "Error: {$error_message}\n\n";
+            $message .= "Please investigate the issue.";
+
+        } elseif($type == 'coursefail') {
+
+            $subject = "Course Lookup Failure Notification";
+            $message = "A failure occurred during course lookup.\n\n";
+            $message .= "Details:\n";
+            $message .= "Course ID: {$error_message}\n";
+            $message .= "Name: {$first_name} {$last_name}\n";
+            $message .= "Email: {$email}\n\n";
+            $message .= "Please investigate the issue.";
+
+        }
         
         // Create a dummy user object for sending the email
         $dummyuser = new stdClass();
