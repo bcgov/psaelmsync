@@ -291,6 +291,7 @@ function create_user($first_name, $last_name, $email, $guid) {
     $user->email = $email;
     $user->idnumber = $guid;
     $user->confirmed = 1;
+    $user->emailformat = 1; // 1 for HTML, 0 for plain text
     $user->timecreated = time();
     $user->timemodified = time();
 
