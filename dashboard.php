@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <a class="nav-link" href="/local/psaelmsync/trigger_sync.php">Manually trigger intake</a>
         </div>
     </div>
-    <div class="col-md-7">
+    <div class="col-md-12">
 
         
         <details class="p-3">
