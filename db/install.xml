@@ -51,6 +51,7 @@
             <FIELD NAME="course_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Course ID"/>
             <FIELD NAME="class_code" TYPE="char" LENGTH="100" NOTNULL="true" COMMENT="Course Class Code"/>
             <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Time created"/>
+            <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Time modified"/>
         </FIELDS>
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

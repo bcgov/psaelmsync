@@ -136,6 +136,12 @@ class observer {
                         ];
                         
                         $DB->insert_record('local_psaelmsync_logs', (object)$log);
+
+                        // Update the associated record in the local_psaelmsync_enrol table.
+                        $deets->enrol_status = 'Complete';
+                        $deets->timemodified = time();
+                        $DB->update_record('local_psaelmsync_enrol', $deets);
+                        
                     }
                 }
             }
