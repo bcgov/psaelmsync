@@ -333,6 +333,7 @@ function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $recor
         $custom_enrolment->course_id = $course_id;
         $custom_enrolment->class_code =  $class_code;
         $custom_enrolment->timecreated = time();
+        $custom_enrolment->timemodified = time();
         $DB->insert_record('local_psaelmsync_enrol', $custom_enrolment);
 
     }
