@@ -209,8 +209,8 @@ function process_enrolment_record($record) {
             // is likely a GUID change.
             if ($useremail = $DB->get_record('user', array('email' => $user_email),'*')) {
                 
-                $error_message = 'User email is associated with another profile.\n';
-                $error_message .= 'https://learning.gww.gov.bc.ca/user/view.php?id=' . $useremail->id . '\n';
+                $error_message = 'User email is associated with another profile.';
+                $error_message .= 'https://learning.gww.gov.bc.ca/user/view.php?id=' . $useremail->id . '';
                 $error_message .= 'This is likely a GUID change issue.';
 
             }
