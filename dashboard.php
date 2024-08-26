@@ -15,8 +15,8 @@ $PAGE->set_heading(get_string('logs', 'local_psaelmsync'));
 
 echo $OUTPUT->header();
 
-// SQL to get the most recent record
-$sql = "SELECT * FROM {local_psaelmsync_runs} WHERE enrolcount > 0 OR suspendcount > 0 OR errorcount > 0 ORDER BY endtime DESC LIMIT 10";
+// SQL to get the most recent record 72 runs in a day so limit to 100 records.
+$sql = "SELECT * FROM {local_psaelmsync_runs} WHERE enrolcount > 0 OR suspendcount > 0 OR errorcount > 0 ORDER BY endtime DESC LIMIT 100";
 // Get the most recent record
 $lastruns = $DB->get_records_sql($sql);
 
@@ -138,8 +138,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <a href="/local/psaelmsync/dashboard.php?search=<?= urlencode(date('Y-m-d H:i:s', (int) $start)) ?>">
                         <?= date('Y-m-d H:i:s', (int) $start) ?> - <?= date('H:i:s', (int) $end) ?>
                     </a>
-                </div>
-                <div>
+                    - 
                     <?php if(!empty($run->enrolcount)): ?>
                     Enrolments: <span class="badge badge-primary"><?= $run->enrolcount ?></span>
                     <?php endif ?>
