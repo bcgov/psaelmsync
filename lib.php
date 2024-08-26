@@ -326,6 +326,7 @@ function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $recor
         $custom_enrolment = new stdClass();
         $custom_enrolment->userid = $user_id;
         $custom_enrolment->record_id = $record_id;
+        $custom_enrolment->enrol_status = 'Enrol';
         $custom_enrolment->sha256hash = $hash;
         $custom_enrolment->enrolid = $instance->id;
         $custom_enrolment->elm_enrolment_id = $enrolment_id;
@@ -340,14 +341,26 @@ function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $recor
 function suspend_user_in_course($user_id, $course_id) {
     global $DB;
 
-    $enrol = enrol_get_plugin('manual');
-    if ($enrol) {
-        $instance = $DB->get_record('enrol', array('courseid' => $course_id, 'enrol' => 'manual'), '*', MUST_EXIST);
-        $enrol->unenrol_user($instance, $user_id);
-        #TODO should we be also deleting the record from local_psaelmsync_enrol here?
+    // Step 1: Suspend the user in the course.
+    $enrol_instance = $DB->get_record('enrol', array('courseid' => $course_id, 'enrol' => 'manual'), '*', IGNORE_MISSING);
+    if ($enrol_instance) {
+        $user_enrolment = $DB->get_record('user_enrolments', array('enrolid' => $enrol_instance->id, 'userid' => $user_id), '*', IGNORE_MISSING);
+        if ($user_enrolment) {
+            $user_enrolment->status = 1; // 1 indicates suspended status
+            $user_enrolment->timemodified = time();
+            $DB->update_record('user_enrolments', $user_enrolment);
+        }
     }
 
+    // Step 2: Update the associated record in the local_psaelmsync_enrol table.
+    $sync_enrolment = $DB->get_record('local_psaelmsync_enrol', array('userid' => $user_id, 'courseid' => $course_id), '*', IGNORE_MISSING);
+    if ($sync_enrolment) {
+        $sync_enrolment->enrol_status = 'Suspend';
+        $sync_enrolment->timemodified = time();
+        $DB->update_record('local_psaelmsync_enrol', $sync_enrolment);
+    }
 }
+
 
 function send_welcome_email($user, $course) {
 

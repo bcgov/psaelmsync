@@ -45,8 +45,8 @@
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
             <FIELD NAME="sha256hash" TYPE="BINARY" LENGTH="32" NOTNULL="true" COMMENT="A hash of $record_date_created . $course_id . $enrolment_status . $user_guid . $user_email"/>
             <FIELD NAME="record_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Record ID from CData"/>
+            <FIELD NAME="enrol_status" TYPE="char" LENGTH="100" NOTNULL="true" COMMENT="Enrol or Suspend."/>
             <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User ID"/>
-            <FIELD NAME="enrolid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Enrolment instance ID"/>
             <FIELD NAME="elm_enrolment_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Custom enrolment ID"/>
             <FIELD NAME="course_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Course ID"/>
             <FIELD NAME="class_code" TYPE="char" LENGTH="100" NOTNULL="true" COMMENT="Course Class Code"/>
