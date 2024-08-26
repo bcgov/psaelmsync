@@ -219,7 +219,7 @@ function process_enrolment_record($record) {
             log_record($record_id, 
                         $hash, 
                         $record_date_created, 
-                        $course_id, 
+                        $course->id, 
                         $class_code, 
                         $enrolment_id, 
                         0, // No user ID since creation failed
