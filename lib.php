@@ -184,8 +184,8 @@ function process_enrolment_record($record) {
                     'Error');
         
         send_failure_notification('coursefail', $user_first_name, $user_last_name, $user_email, $course_id);
-
-        return;
+        $e = 'Error';
+        return $e;
     }
 
     // Check if user exists by GUID     .
@@ -234,7 +234,8 @@ function process_enrolment_record($record) {
             send_failure_notification('userfail', $user_first_name, $user_last_name, $user_email, $error_message);
 
             // Return to skip further processing of this record.
-            return;
+            $e = 'Error';
+            return $e;
         }
     }
 
