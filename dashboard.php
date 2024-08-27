@@ -34,11 +34,10 @@ echo $OUTPUT->header();
         <input type="text" name="search" value="<?= s(optional_param('search', '', PARAM_RAW)) ?>" class="form-control" placeholder="<?= get_string('search', 'local_psaelmsync') ?>">
         <div class="input-group-append">
             <button class="btn btn-primary" type="submit"><?= get_string('search', 'local_psaelmsync') ?></button>
-            <a href="/local/psaelmsync/dashboard.php" class="btn btn-secondary">Clear</a>
         </div>
-        
     </div>
 </form>
+<div><a href="/local/psaelmsync/dashboard.php" class="btn btn-link">Clear search</a></div>
 <?php
 // Get the search query.
 $search = optional_param('search', '', PARAM_RAW);
