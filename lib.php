@@ -354,7 +354,7 @@ function suspend_user_in_course($user_id, $course_id) {
     }
 
     // Step 2: Update the associated record in the local_psaelmsync_enrol table.
-    $sync_enrolment = $DB->get_record('local_psaelmsync_enrol', array('userid' => $user_id, 'courseid' => $course_id), '*', IGNORE_MISSING);
+    $sync_enrolment = $DB->get_record('local_psaelmsync_enrol', array('user_id' => $user_id, 'course_id' => $course_id), '*', IGNORE_MISSING);
     if ($sync_enrolment) {
         $sync_enrolment->enrol_status = 'Suspend';
         $sync_enrolment->timemodified = time();
