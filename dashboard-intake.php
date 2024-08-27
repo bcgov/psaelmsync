@@ -126,10 +126,8 @@ document.addEventListener('DOMContentLoaded', function () {
 <div class="row mb-2">
     <div class="col-md-12">
 
-            <h2>Intake run history</h2>
-            <p>Runs where there was at least 1 enrolment or drop. Searching for a timestamp will show 
-                you records 2 minutes on either side of the given time.
-            </p>
+            <p>Runs where there was at least 1 enrolment or drop. 
+                Runs with no actions are still logged, just not shown here.</p>
             <div style="height: 320px;">
                 <canvas id="runsChart"></canvas>
             </div>

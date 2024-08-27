@@ -37,6 +37,7 @@ echo $OUTPUT->header();
         </div>
     </div>
 </form>
+<p>Searching for a timestamp will show you records 2 minutes on either side of the given time.</p>
 <div><a href="/local/psaelmsync/dashboard.php" class="btn btn-link">Clear search</a></div>
 <?php
 // Get the search query.
