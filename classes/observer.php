@@ -116,7 +116,6 @@ class observer {
                         $response = curl_exec($ch);
                         curl_close($ch);
 
-
                         $log = [
                             'record_id' => $record_id,
                             'record_date_created' => $datecreated,
@@ -137,10 +136,22 @@ class observer {
                         
                         $DB->insert_record('local_psaelmsync_logs', (object)$log);
 
-                        // Update the associated record in the local_psaelmsync_enrol table.
-                        $deets->enrol_status = 'Complete';
-                        $deets->timemodified = time();
-                        $DB->update_record('local_psaelmsync_enrol', $deets);
+                        // // Update the associated record in the local_psaelmsync_enrol table.
+                        // $deets->enrol_status = 'Complete';
+                        // $deets->timemodified = time();
+
+                        // try {
+
+                        //     $DB->update_record('local_psaelmsync_enrol', $deets);
+
+                        // } catch (Exception $e) {
+
+                        //     error_log('Failed to update local_psaelmsync_enrol: ' . $e->getMessage());
+                        //     mtrace('Failed to update local_psaelmsync_enrol: ' . $e->getMessage());
+                        //     // #TODO handle the exception appropriately
+                        //     exit;
+                        // }
+
                         
                     }
                 }
