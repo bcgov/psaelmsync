@@ -41,3 +41,4 @@ $string['notificationemails'] = 'Alert emails';
 $string['notificationemails_desc'] = 'When issues arise with the processing of records, send an alert to these (comma-separated) addresses.';
 $string['notificationhours'] = 'Hours without processing a record';
 $string['notificationhours_desc'] = 'After each run we check to see how long it\'s been since we last processed an enrol or suspend. If it\'s been longer than this value it\'ll send a notification to \'notificationemails\'';
+$string['intakerunhistory'] = 'Intake Run History';
