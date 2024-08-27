@@ -22,7 +22,7 @@ echo $OUTPUT->header();
         <a class="nav-link active" href="/local/psaelmsync/dashboard.php">Dashboard</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/local/psaelmsync/intake_run_history.php">Intake Run History</a>
+        <a class="nav-link" href="/local/psaelmsync/dashboard-intake.php">Intake Run History</a>
     </li>
 </ul>
 

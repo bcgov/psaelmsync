@@ -14,6 +14,20 @@ $PAGE->set_heading(get_string('intakerunhistory', 'local_psaelmsync'));
 
 echo $OUTPUT->header();
 
+?>
+
+<!-- Tabbed Navigation -->
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link" href="/local/psaelmsync/dashboard.php">Dashboard</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="/local/psaelmsync/dashboard-intake.php">Intake Run History</a>
+    </li>
+</ul>
+
+<?php
+
 // SQL to get the most recent record 72 runs in a day so limit to 100 records.
 $sql = "SELECT * FROM {local_psaelmsync_runs} WHERE enrolcount > 0 OR suspendcount > 0 OR errorcount > 0 ORDER BY endtime DESC LIMIT 100";
 $lastruns = $DB->get_records_sql($sql);
