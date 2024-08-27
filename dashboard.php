@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             title: {
                 display: true,
                 text: 'Recent Runs Overview'
@@ -125,8 +126,9 @@ document.addEventListener('DOMContentLoaded', function () {
             <p>Runs where there was at least 1 enrolment or drop. Searching for a timestamp will show 
                 you records 2 minutes on either side of the given time.
             </p>
-            
-            <canvas id="runsChart"></canvas>
+            <div style="height: 320px;">
+                <canvas id="runsChart"></canvas>
+            </div>
             
             <?php foreach($lastruns as $run): ?>
             <?php
