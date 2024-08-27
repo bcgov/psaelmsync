@@ -5,7 +5,7 @@ require_login();
 global $DB;
 
 $context = context_system::instance();
-require_capability('local/psaelmsync:viewlogs', $context);
+require_capability('local_psaelmsync:viewlogs', $context);
 
 $PAGE->set_url('/local/psaelmsync/intake_run_history.php');
 $PAGE->set_context($context);
@@ -25,15 +25,23 @@ echo $OUTPUT->header();
         <a class="nav-link" href="/local/psaelmsync/dashboard.php">Dashboard</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link active" href="/local/psaelmsync/dashboard-intake.php">Intake Run History</a>
+        <a class="nav-link active" href="/local/psaelmsync/intake_run_history.php">Intake Run History</a>
     </li>
 </ul>
 
 <?php
 
-// SQL to get the most recent record 72 runs in a day so limit to 100 records.
-$sql = "SELECT * FROM {local_psaelmsync_runs} WHERE enrolcount > 0 OR suspendcount > 0 OR errorcount > 0 ORDER BY endtime DESC LIMIT 100";
-$lastruns = $DB->get_records_sql($sql);
+// Setup pagination variables
+$perpage = optional_param('perpage', 20, PARAM_INT); // Number of records per page
+$page = optional_param('page', 0, PARAM_INT); // Current page number
+$offset = $page * $perpage; // Calculate the offset for SQL query
+
+// Get the total count of records
+$totalcount = $DB->count_records_select('local_psaelmsync_runs', 'enrolcount > 0 OR suspendcount > 0 OR errorcount > 0');
+
+// SQL to get the most recent records with pagination.
+$sql = "SELECT * FROM {local_psaelmsync_runs} WHERE enrolcount > 0 OR suspendcount > 0 OR errorcount > 0 ORDER BY endtime DESC";
+$lastruns = $DB->get_records_sql($sql, null, $offset, $perpage);
 
 // Prepare data for Chart.js
 $chartData = [
@@ -122,46 +130,54 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+
 <!-- Chart.js Chart -->
 <div class="row mb-2">
     <div class="col-md-12">
+        <p>Runs where there was at least 1 enrolment or drop. 
+            Runs with no actions are still logged, just not shown here.</p>
+        <div style="height: 320px;">
+            <canvas id="runsChart"></canvas>
+        </div>
 
-            <p>Runs where there was at least 1 enrolment or drop. 
-                Runs with no actions are still logged, just not shown here.</p>
-            <div style="height: 320px;">
-                <canvas id="runsChart"></canvas>
-            </div>
-            
+        <!-- Results Table -->
+        <table class="table table-striped table-bordered mt-4">
+            <thead>
+                <tr>
+                    <th>Date and Time</th>
+                    <th>Enrolments</th>
+                    <th>Drops</th>
+                    <th>Errors</th>
+                    <th>Skipped</th>
+                </tr>
+            </thead>
+            <tbody>
             <?php foreach($lastruns as $run): ?>
             <?php
             $start = (int) $run->starttime / 1000;
             $end = (int) $run->endtime / 1000;
             ?>
-            <div class="my-2 p-3 bg-light rounded-lg">
-                <div>
-                    <a href="/local/psaelmsync/intake_run_history.php?search=<?= urlencode(date('Y-m-d H:i:s', (int) $start)) ?>">
+            <tr>
+                <td>
+                    <a href="/local/psaelmsync/dashboard.php?search=<?= urlencode(date('Y-m-d H:i:s', (int) $start)) ?>">
                         <?= date('Y-m-d H:i:s', (int) $start) ?> - <?= date('H:i:s', (int) $end) ?>
                     </a>
-                    - 
-                    <?php if(!empty($run->enrolcount)): ?>
-                    Enrolments: <span class="badge badge-primary"><?= $run->enrolcount ?></span>
-                    <?php endif ?>
-                    <?php if(!empty($run->suspendcount)): ?>
-                    Drops: <span class="badge badge-primary"><?= $run->suspendcount ?></span>
-                    <?php endif ?>
-                    <?php if(!empty($run->errorcount)): ?>
-                    Errors: <span class="badge badge-danger"><?= $run->errorcount ?></span>
-                    <?php endif ?>
-                    <?php if(!empty($run->skippedcount)): ?>
-                    Skipped: <span class="badge badge-primary"><?= $run->skippedcount ?></span>
-                    <?php endif ?>
-                </div>
-            </div>
+                </td>
+                <td><?= $run->enrolcount ?></td>
+                <td><?= $run->suspendcount ?></td>
+                <td><?= $run->errorcount ?></td>
+                <td><?= $run->skippedcount ?></td>
+            </tr>
             <?php endforeach ?>
+            </tbody>
+        </table>
 
+        <!-- Pagination controls -->
+        <?php
+        echo $OUTPUT->paging_bar($totalcount, $page, $perpage, $PAGE->url);
+        ?>
     </div>
 </div>
 
 <?php
 echo $OUTPUT->footer();
-?>
