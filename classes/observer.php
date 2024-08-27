@@ -94,7 +94,6 @@ class observer {
                             'USER_EFFECTIVE_DATE' => '2017-02-14',
                             'COURSE_IDENTIFIER' => (int) $courseidnumber, 
                             'COURSE_SHORTNAME' => $class_code, 
-                            'date_created' => $datecreated, 
                             'EMAIL' => $user->email,
                             'GUID' => $user->idnumber,
                             'FIRST_NAME' => $user->firstname, 
