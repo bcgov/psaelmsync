@@ -48,7 +48,7 @@ class observer {
                         //     'userid' => $userid
                         // ]);
                         // Get enrolment_id and another field (e.g., status) from local_psaelmsync_enrol table.
-                        $deets = $DB->get_record('local_psaelmsync_enrol', ['course_id' => $courseid, 'userid' => $userid], 'elm_enrolment_id, class_code, sha256hash');
+                        $deets = $DB->get_record('local_psaelmsync_enrol', ['course_id' => $courseid, 'user_id' => $userid], 'elm_enrolment_id, class_code, sha256hash');
 
                         if (!$deets) {
                             error_log('Issue getting records from local_psaelmsync_enrol');
@@ -137,20 +137,19 @@ class observer {
                         $DB->insert_record('local_psaelmsync_logs', (object)$log);
 
                         // // Update the associated record in the local_psaelmsync_enrol table.
-                        // $deets->enrol_status = 'Complete';
-                        // $deets->timemodified = time();
+                        $deets->enrol_status = 'Complete';
+                        $deets->timemodified = time();
 
-                        // try {
+                        try {
 
-                        //     $DB->update_record('local_psaelmsync_enrol', $deets);
+                            $DB->update_record('local_psaelmsync_enrol', $deets);
 
-                        // } catch (Exception $e) {
+                        } catch (Exception $e) {
 
-                        //     error_log('Failed to update local_psaelmsync_enrol: ' . $e->getMessage());
-                        //     mtrace('Failed to update local_psaelmsync_enrol: ' . $e->getMessage());
-                        //     // #TODO handle the exception appropriately
-                        //     exit;
-                        // }
+                            error_log('Failed to update local_psaelmsync_enrol: ' . $e->getMessage());
+                            // #TODO handle the exception appropriately
+                            exit;
+                        }
 
                         
                     }
