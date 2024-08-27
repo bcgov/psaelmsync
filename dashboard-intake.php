@@ -19,6 +19,9 @@ echo $OUTPUT->header();
 <!-- Tabbed Navigation -->
 <ul class="nav nav-tabs mb-3">
     <li class="nav-item">
+        <a class="nav-link" href="/admin/settings.php?section=local_psaelmsync">Settings</a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link" href="/local/psaelmsync/dashboard.php">Dashboard</a>
     </li>
     <li class="nav-item">

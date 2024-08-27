@@ -19,13 +19,26 @@ echo $OUTPUT->header();
 <!-- Tabbed Navigation -->
 <ul class="nav nav-tabs mb-3">
     <li class="nav-item">
+        <a class="nav-link" href="/admin/settings.php?section=local_psaelmsync">Settings</a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link active" href="/local/psaelmsync/dashboard.php">Dashboard</a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="/local/psaelmsync/dashboard-intake.php">Intake Run History</a>
     </li>
 </ul>
-
+<!-- Search Form -->
+<form method="get" action="dashboard.php" class="my-3">
+    <div class="input-group">
+        <input type="text" name="search" value="<?= s(optional_param('search', '', PARAM_RAW)) ?>" class="form-control" placeholder="<?= get_string('search', 'local_psaelmsync') ?>">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="submit"><?= get_string('search', 'local_psaelmsync') ?></button>
+            <a href="/local/psaelmsync/dashboard.php" class="btn btn-secondary">Clear</a>
+        </div>
+        
+    </div>
+</form>
 <?php
 // Get the search query.
 $search = optional_param('search', '', PARAM_RAW);
