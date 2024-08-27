@@ -324,7 +324,7 @@ function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $recor
 
         // Store the custom enrolment ID in the enrol table.
         $custom_enrolment = new stdClass();
-        $custom_enrolment->userid = $user_id;
+        $custom_enrolment->user_id = $user_id;
         $custom_enrolment->record_id = $record_id;
         $custom_enrolment->enrol_status = 'Enrol';
         $custom_enrolment->sha256hash = $hash;
