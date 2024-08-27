@@ -29,7 +29,7 @@ echo $OUTPUT->header();
     </li>
 </ul>
 <!-- Search Form -->
-<form method="get" action="dashboard.php" class="my-3">
+<form method="get" action="dashboard.php" class="mt-3">
     <div class="input-group">
         <input type="text" name="search" value="<?= s(optional_param('search', '', PARAM_RAW)) ?>" class="form-control" placeholder="<?= get_string('search', 'local_psaelmsync') ?>">
         <div class="input-group-append">
@@ -37,11 +37,15 @@ echo $OUTPUT->header();
         </div>
     </div>
 </form>
-<p>Searching for a timestamp will show you records 2 minutes on either side of the given time.</p>
-<div><a href="/local/psaelmsync/dashboard.php" class="btn btn-link">Clear search</a></div>
-<?php
+<?php 
 // Get the search query.
 $search = optional_param('search', '', PARAM_RAW);
+if(!empty($search)):
+?>
+<p>Searching for a timestamp will show you records 2 minutes on either side of the given time.</p>
+<div><a href="/local/psaelmsync/dashboard.php" class="btn btn-link">Clear search</a></div>
+<?php endif ?>
+<?php
 
 $table = new \local_psaelmsync\output\log_table('psaelmsync_log_table');
 
