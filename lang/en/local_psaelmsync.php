@@ -24,6 +24,7 @@ $string['user_guid'] = 'GUID';
 $string['status'] = 'Status';
 $string['timestamp'] = 'Timestamp';
 $string['viewlogs'] = 'View Dashboard';
+$string['psaelmsync:viewlogs'] = 'View Dashboards';
 $string['apiurl'] = 'Enrolment API URL';
 $string['apiurl_desc'] = 'CData Endpoint for enrolments.';
 $string['datefilterminutes'] = 'Rolling window minutes';
