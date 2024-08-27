@@ -7,7 +7,7 @@ global $DB;
 $context = context_system::instance();
 require_capability('local_psaelmsync:viewlogs', $context);
 
-$PAGE->set_url('/local/psaelmsync/intake_run_history.php');
+$PAGE->set_url('/local/psaelmsync/dashboard-intake.php');
 $PAGE->set_context($context);
 $PAGE->set_title(get_string('pluginname', 'local_psaelmsync') . ' - ' . get_string('intakerunhistory', 'local_psaelmsync'));
 $PAGE->set_heading(get_string('intakerunhistory', 'local_psaelmsync'));
@@ -25,7 +25,7 @@ echo $OUTPUT->header();
         <a class="nav-link" href="/local/psaelmsync/dashboard.php">Dashboard</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link active" href="/local/psaelmsync/intake_run_history.php">Intake Run History</a>
+        <a class="nav-link active" href="/local/psaelmsync/dashboard-intake.php">Intake Run History</a>
     </li>
 </ul>
 
