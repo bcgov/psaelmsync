@@ -22,10 +22,10 @@ echo $OUTPUT->header();
         <a class="nav-link" href="/admin/settings.php?section=local_psaelmsync">Settings</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/local/psaelmsync/dashboard.php">Dashboard</a>
+        <a class="nav-link" href="/local/psaelmsync/dashboard.php">Learner Dashboard</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link active" href="/local/psaelmsync/dashboard-intake.php">Intake Run History</a>
+        <a class="nav-link active" href="/local/psaelmsync/dashboard-intake.php">Intake Run Dashboard</a>
     </li>
 </ul>
 

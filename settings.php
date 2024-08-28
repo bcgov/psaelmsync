@@ -6,7 +6,15 @@ if ($hassiteconfig) {
 
     $settings->add(new admin_setting_heading('local_psaelmsync/dashboard', 
         get_string('logs', 'local_psaelmsync'), 
-        html_writer::link(new moodle_url('/local/psaelmsync/dashboard.php'), get_string('viewlogs', 'local_psaelmsync'))));
+        html_writer::link(new moodle_url('/local/psaelmsync/dashboard.php'), 
+        get_string('viewlogs', 'local_psaelmsync'))));
+
+    $settings->add(new admin_setting_configtext('local_psaelmsync/dashboardlink',
+        '',
+        '',
+        html_writer::link(new moodle_url('/local/psaelmsync/dashboard-intake.php'), 
+        get_string('viewintake', 'local_psaelmsync')),
+        PARAM_RAW));
     
     $settings->add(new admin_setting_configcheckbox('local_psaelmsync/enabled',
         get_string('enabled', 'local_psaelmsync'),
@@ -37,23 +45,20 @@ if ($hassiteconfig) {
         'local_psaelmsync/completion_apiurl',
         get_string('completion_apiurl', 'local_psaelmsync'),
         get_string('completion_apiurl_desc', 'local_psaelmsync'),
-        '', PARAM_URL
-    ));
+        '', PARAM_URL));
 
     $settings->add(new admin_setting_configtext(
         'local_psaelmsync/completion_apitoken',
         get_string('completion_apitoken', 'local_psaelmsync'),
         get_string('completion_apitoken_desc', 'local_psaelmsync'),
-        '', PARAM_ALPHANUMEXT
-    ));
+        '', PARAM_ALPHANUMEXT));
     
     $settings->add(new admin_setting_configtext(
         'local_psaelmsync/notificationemails',
         get_string('notificationemails', 'local_psaelmsync'),
         get_string('notificationemails_desc', 'local_psaelmsync'),
         '',
-        PARAM_TEXT
-    ));
+        PARAM_TEXT));
 
     $ADMIN->add('localplugins', $settings);
 }
