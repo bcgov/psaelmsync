@@ -5,7 +5,7 @@ require_login();
 global $DB;
 
 $context = context_system::instance();
-require_capability('local_psaelmsync:viewlogs', $context);
+require_capability('local/psaelmsync:viewlogs', $context);
 
 $PAGE->set_url('/local/psaelmsync/dashboard-intake.php');
 $PAGE->set_context($context);
