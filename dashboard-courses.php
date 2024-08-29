@@ -53,9 +53,9 @@ $courses = $DB->get_records_sql("SELECT id, fullname, idnumber FROM {course} WHE
         <?php foreach ($courses as $course): ?>
             <?php
             // Count enrol, suspend, and error log entries for each course
-            $enrolments = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'action' => 'enrolled']);
-            $suspends = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'action' => 'suspended']);
-            $errors = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'status' => 'error']);
+            $enrolments = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'action' => 'Enrol']);
+            $suspends = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'action' => 'Suspend']);
+            $errors = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'status' => 'Error']);
             ?>
             <tr>
                 <td><?php echo format_string($course->fullname); ?></td>
