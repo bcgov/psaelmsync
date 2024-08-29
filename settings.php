@@ -4,18 +4,11 @@ defined('MOODLE_INTERNAL') || die();
 if ($hassiteconfig) {
     $settings = new admin_settingpage('local_psaelmsync', get_string('pluginname', 'local_psaelmsync'));
 
-    $settings->add(new admin_setting_heading('local_psaelmsync/dashboard', 
+    $settings->add(new admin_setting_configtext('local_psaelmsync/dashboard', 
         get_string('logs', 'local_psaelmsync'), 
         html_writer::link(new moodle_url('/local/psaelmsync/dashboard.php'), 
         get_string('viewlogs', 'local_psaelmsync'))));
 
-    $settings->add(new admin_setting_configtext('local_psaelmsync/dashboardlink',
-        '',
-        '',
-        html_writer::link(new moodle_url('/local/psaelmsync/dashboard-intake.php'), 
-        get_string('viewintake', 'local_psaelmsync')),
-        PARAM_RAW));
-    
     $settings->add(new admin_setting_configcheckbox('local_psaelmsync/enabled',
         get_string('enabled', 'local_psaelmsync'),
         get_string('enabled_desc', 'local_psaelmsync'),
