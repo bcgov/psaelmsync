@@ -37,7 +37,9 @@ $courses = $DB->get_records_sql("SELECT id, fullname, idnumber FROM {course} WHE
         <a class="nav-link" href="/local/psaelmsync/dashboard-intake.php">Intake Run Dashboard</a>
     </li>
 </ul>
-
+<p>This dashboard is a work in progress. It is only meant to give a count of the 
+    log records that have come through CData and does not reflect the actual number
+    of enrolments in a given course.</p>
 <!-- Results Table -->
 <table class="table table-striped table-bordered">
     <thead>
