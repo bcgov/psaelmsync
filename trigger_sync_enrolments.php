@@ -59,7 +59,7 @@ foreach ($courses as $course) {
             // Check if the record already exists in local_psaelmsync_enrol
             $exists = $DB->record_exists('local_psaelmsync_enrol', [
                 'course_id' => $course->id,
-                'userid' => $user->id
+                'user_id' => $user->id
             ]);
 
             if (!$exists) {
