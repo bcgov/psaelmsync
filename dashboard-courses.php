@@ -5,7 +5,7 @@ require_login();
 global $DB, $OUTPUT, $PAGE;
 
 $context = context_system::instance();
-require_capability('local/psaelmsync:viewlogs', $context);
+require_capability('local_psaelmsync:viewlogs', $context);
 
 $PAGE->set_url('/local/psaelmsync/dashboard-courses.php');
 $PAGE->set_context($context);
@@ -14,13 +14,19 @@ $PAGE->set_heading(get_string('courseenrolstats', 'local_psaelmsync'));
 
 echo $OUTPUT->header();
 
-// SQL to select all courses with an IDNumber
-$courses = $DB->get_records_sql("SELECT id, fullname, idnumber FROM {course} WHERE idnumber IS NOT NULL AND idnumber <> '' ORDER BY fullname ASC");
+// SQL to select all courses with IDNumber and their completion_opt_in field
+$courses = $DB->get_records_sql("
+    SELECT c.id, c.fullname, c.idnumber, COALESCE(cfd.intvalue, 0) AS completion_opt_in
+    FROM {course} c
+    LEFT JOIN {customfield_data} cfd ON cfd.instanceid = c.id
+    LEFT JOIN {customfield_field} cff ON cff.id = cfd.fieldid
+    WHERE c.idnumber IS NOT NULL 
+    AND c.idnumber <> ''
+    AND cff.shortname = 'completion_opt_in'
+    ORDER BY c.fullname ASC
+");
 
 ?>
-
-<!-- Page Heading -->
-<h2><?php echo get_string('courseenrolstats', 'local_psaelmsync'); ?></h2>
 
 <!-- Tabbed Navigation -->
 <ul class="nav nav-tabs mb-3">
@@ -37,15 +43,18 @@ $courses = $DB->get_records_sql("SELECT id, fullname, idnumber FROM {course} WHE
         <a class="nav-link" href="/local/psaelmsync/dashboard-intake.php">Intake Run Dashboard</a>
     </li>
 </ul>
+
 <p>This dashboard is a work in progress. It is only meant to give a count of the 
     log records that have come through CData and does not reflect the actual number
     of enrolments in a given course.</p>
+
 <!-- Results Table -->
 <table class="table table-striped table-bordered">
     <thead>
         <tr>
             <th><?php echo get_string('course', 'local_psaelmsync'); ?></th>
             <th><?php echo get_string('idnumber', 'local_psaelmsync'); ?></th>
+            <th><?php echo get_string('completion_opt_in', 'local_psaelmsync'); ?></th>
             <th><?php echo get_string('enrolments', 'local_psaelmsync'); ?></th>
             <th><?php echo get_string('suspends', 'local_psaelmsync'); ?></th>
             <th><?php echo get_string('errors', 'local_psaelmsync'); ?></th>
@@ -60,8 +69,16 @@ $courses = $DB->get_records_sql("SELECT id, fullname, idnumber FROM {course} WHE
             $errors = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'status' => 'Error']);
             ?>
             <tr>
-                <td><?php echo format_string($course->fullname); ?></td>
+                <td>
+                    <a href="/course/view.php?id=<?php echo $course->id; ?>" target="_blank">
+                        <?php echo format_string($course->fullname); ?>
+                    </a>
+                    <small>(<a href="/user/index.php?id=<?php echo $course->id; ?>" target="_blank">
+                        Participants
+                    </a>)</small>
+                </td>
                 <td><?php echo format_string($course->idnumber); ?></td>
+                <td><?php echo ($course->completion_opt_in == 1) ? 'Opted In' : 'Not Opted In'; ?></td> <!-- Show whether course is opted in or not -->
                 <td><?php echo $enrolments; ?></td>
                 <td><?php echo $suspends; ?></td>
                 <td><?php echo $errors; ?></td>
@@ -72,3 +89,4 @@ $courses = $DB->get_records_sql("SELECT id, fullname, idnumber FROM {course} WHE
 
 <?php
 echo $OUTPUT->footer();
+?>
