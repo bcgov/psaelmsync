@@ -66,6 +66,7 @@ foreach ($courses as $course) {
                 // Insert record into local_psaelmsync_enrol
                 $enrid = floor(microtime(true) * 1000);
                 $record = new stdClass();
+                $record->record_id = $enrid;
                 $record->course_id = $course->idnumber;
                 $record->user_id = $user->id;
                 $record->enrol_status = 'Enrol';
