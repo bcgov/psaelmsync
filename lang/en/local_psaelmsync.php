@@ -50,3 +50,6 @@ $string['idnumber'] = 'ID Number';
 $string['enrolments'] = 'Enrolments';
 $string['suspends'] = 'Suspends';
 $string['errors'] = 'Errors';
+$string['syncenrolments'] = 'Sync Enrolments';
+$string['nocourses'] = 'No courses found with completion opt-in enabled.';
+$string['viewlogs'] = 'View Logs';

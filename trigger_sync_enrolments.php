@@ -28,6 +28,7 @@ $sql = "
 $courses = $DB->get_records_sql($sql);
 
 if (!$courses) {
+    echo $OUTPUT->notification($sql, 'notifyproblem');
     echo $OUTPUT->notification(get_string('nocourses', 'local_psaelmsync'), 'notifyproblem');
     echo $OUTPUT->footer();
     exit;
