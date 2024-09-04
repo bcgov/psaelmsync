@@ -67,7 +67,7 @@ foreach ($courses as $course) {
                 $enrid = floor(microtime(true) * 1000);
                 $record = new stdClass();
                 $record->course_id = $course->idnumber;
-                $record->userid = $user->id;
+                $record->user_id = $user->id;
                 $record->enrol_status = 'Enrol';
                 $record->elm_enrolment_id = $enrid;
                 $record->class_code = $itemcode; // Use the custom field 'itemcode' as the class code
