@@ -1,7 +1,7 @@
 <?php
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2024082900;
+$plugin->version   = 2024082901;
 // $plugin->requires  = 2022041900; // Moodle 4.2+.
 $plugin->requires  = 2021051718; // Moodle 3.11+.
 $plugin->component = 'local_psaelmsync';
