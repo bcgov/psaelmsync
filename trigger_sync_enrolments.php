@@ -17,9 +17,9 @@ echo $OUTPUT->header();
 // Find courses with the 'completion_opt_in' custom field checked
 $sql = "
     SELECT c.id, c.fullname, c.idnumber
-    FROM {course} c
-    JOIN {customfield_data} cfd ON cfd.instanceid = c.id
-    JOIN {customfield_field} cff ON cff.id = cfd.fieldid
+    FROM course c
+    JOIN customfield_data cfd ON cfd.instanceid = c.id
+    JOIN customfield_field cff ON cff.id = cfd.fieldid
     WHERE cff.shortname = 'completion_opt_in' 
     AND cfd.intvalue = 1
     ORDER BY c.fullname ASC
