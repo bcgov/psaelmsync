@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <!-- Chart.js Chart -->
 <div class="row mb-2">
     <div class="col-md-12">
-        <p>Runs where there was at least 1 enrolment or drop. 
+        <p>Runs where there was at least 1 enrolment, drop, or error. 
             Runs with no actions are still logged, just not shown here.</p>
         <div style="height: 320px;">
             <canvas id="runsChart"></canvas>
