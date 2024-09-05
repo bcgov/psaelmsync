@@ -52,7 +52,9 @@ class observer {
 
                         if (!$deets) {
                             error_log('Issue getting records from local_psaelmsync_enrol');
-                            // #TODO send an email to an admin
+                            // Send an email to an admin
+                            $error = 'User ID: ' . $userid . '. Could not find an associated record in local_psaelmsync_enrol for this completion.';
+                            send_failure_notification('enrollookup', $user->firstname, $user->lastname, $user->email, $error);
                             exit;
                         }
 
@@ -156,6 +158,51 @@ class observer {
             }
         } else {
             error_log('Custom field doesn\'t exist?');
+        }
+    }
+
+    // Function to send failure notification email
+    private function send_failure_notification($type, $first_name, $last_name, $email, $error_message) {
+        global $CFG;
+
+        // Get the list of email addresses from admin settings
+        $admin_emails = get_config('local_psaelmsync', 'notificationemails');
+        
+        if (!empty($admin_emails)) {
+            $emails = explode(',', $admin_emails);
+            if($type == 'enrollookup') {
+
+                $subject = "User Enrolment Data Lookup Failure";
+                $message = "A failure occurred during the lookup of enrolment data when this course was completed.\n\n";
+                $message .= "Details:\n";
+                $message .= "Name: {$first_name} {$last_name}\n";
+                $message .= "Email: {$email}\n";
+                $message .= "Error: {$error_message}\n\n";
+                $message .= "Please investigate the issue.";
+
+            }
+            
+            // Create a dummy user object for sending the email
+            $dummyuser = new stdClass();
+            $dummyuser->email = 'noreply-psalssync@gov.bc.ca';
+            $dummyuser->firstname = 'System';
+            $dummyuser->lastname = 'Notifier';
+            $dummyuser->id = -99; // Dummy user id
+            
+            foreach ($emails as $admin_email) {
+                // Trim to remove any extra whitespace around email addresses
+                $admin_email = trim($admin_email);
+                
+                // Create a recipient user object
+                $recipient = new stdClass();
+                $recipient->email = $admin_email;
+                $recipient->id = -99; // Dummy user id
+                $recipient->firstname = 'PSA';
+                $recipient->lastname = 'Moodle';
+                
+                // Send the email
+                email_to_user($recipient, $dummyuser, $subject, $message);
+            }
         }
     }
 }
