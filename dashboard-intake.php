@@ -35,7 +35,7 @@ echo $OUTPUT->header();
 <?php
 
 // Setup pagination variables
-$perpage = optional_param('perpage', 20, PARAM_INT); // Number of records per page
+$perpage = optional_param('perpage', 100, PARAM_INT); // Number of records per page
 $page = optional_param('page', 0, PARAM_INT); // Current page number
 $offset = $page * $perpage; // Calculate the offset for SQL query
 
