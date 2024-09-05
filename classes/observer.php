@@ -8,6 +8,7 @@ class observer {
     public static function course_completed(\core\event\course_completed $event) {
 
         global $DB;
+        global $CFG;
         // Get course ID from event data.
         $courseid = $event->courseid;
         // Get user ID from event data.
@@ -38,6 +39,7 @@ class observer {
 
                         // Get the course ID Number to match ELM's course_id 
                         $elmcourseid = $course->idnumber;
+                        $coursename = $course->fullname;
 
                         // Get user idnumber.
                         $user = $DB->get_record('user', ['id' => $userid], 'idnumber, firstname, lastname, email');
@@ -46,11 +48,44 @@ class observer {
                         $deets = $DB->get_record('local_psaelmsync_enrol', ['course_id' => $elmcourseid, 'user_id' => $userid], 'elm_enrolment_id, class_code, sha256hash');
 
                         if (!$deets) {
-                            error_log('Issue getting records from local_psaelmsync_enrol');
-                            // Send an email to an admin
-                            $error = 'User ID: ' . $userid . '. Course ID: ' . $courseid . '. ELM Course ID: ' . $elmcourseid . '. ';
-                            $error .= 'Could not find an associated record in local_psaelmsync_enrol for this completion.';
-                            send_failure_notification('enrollookup', $user->firstname, $user->lastname, $user->email, $error);
+
+                            // Get the list of email addresses from admin settings
+                            $admin_emails = get_config('local_psaelmsync', 'notificationemails');
+                            
+                            if (!empty($admin_emails)) {
+
+                                $emails = explode(',', $admin_emails);
+
+                                $subject = "User Enrolment Data Lookup Failure";
+                                
+                                $message = $user->firstname . ' ' . $user->lastname . ': https://learning.gww.gov.bc.ca/user/view.php?id=' . $userid . '\n';
+                                $message .= $coursename . ': https://learning.gww.gov.bc.ca/course/view.php?id=' . $courseid . '\n';
+                                $message .= 'ELM Course ID: ' . $elmcourseid . '\n';
+                                $message .= 'Could not find an associated record in local_psaelmsync_enrol for this completion.';
+                                
+                                // Create a dummy user object for sending the email
+                                $dummyuser = new stdClass();
+                                $dummyuser->email = 'noreply-psalssync@learning.gww.gov.bc.ca';
+                                $dummyuser->firstname = 'System';
+                                $dummyuser->lastname = 'Notifier';
+                                $dummyuser->id = -99; // Dummy user id
+                                
+                                foreach ($emails as $admin_email) {
+                                    // Trim to remove any extra whitespace around email addresses
+                                    $admin_email = trim($admin_email);
+                                    
+                                    // Create a recipient user object
+                                    $recipient = new stdClass();
+                                    $recipient->email = $admin_email;
+                                    $recipient->id = -99; // Dummy user id
+                                    $recipient->firstname = 'PSA';
+                                    $recipient->lastname = 'Moodle';
+                                    
+                                    // Send the email
+                                    email_to_user($recipient, $dummyuser, $subject, $message);
+                                }
+                            }
+                            // Now stop processing because we don't have enough info to proceed.
                             exit;
                         }
 
@@ -157,48 +192,4 @@ class observer {
         }
     }
 
-    // Function to send failure notification email
-    private function send_failure_notification($type, $first_name, $last_name, $email, $error_message) {
-        global $CFG;
-
-        // Get the list of email addresses from admin settings
-        $admin_emails = get_config('local_psaelmsync', 'notificationemails');
-        
-        if (!empty($admin_emails)) {
-            $emails = explode(',', $admin_emails);
-            if($type == 'enrollookup') {
-
-                $subject = "User Enrolment Data Lookup Failure";
-                $message = "A failure occurred during the lookup of enrolment data when this course was completed.\n\n";
-                $message .= "Details:\n";
-                $message .= "Name: {$first_name} {$last_name}\n";
-                $message .= "Email: {$email}\n";
-                $message .= "Error: {$error_message}\n\n";
-                $message .= "Please investigate the issue.";
-
-            }
-            
-            // Create a dummy user object for sending the email
-            $dummyuser = new stdClass();
-            $dummyuser->email = 'noreply-psalssync@gov.bc.ca';
-            $dummyuser->firstname = 'System';
-            $dummyuser->lastname = 'Notifier';
-            $dummyuser->id = -99; // Dummy user id
-            
-            foreach ($emails as $admin_email) {
-                // Trim to remove any extra whitespace around email addresses
-                $admin_email = trim($admin_email);
-                
-                // Create a recipient user object
-                $recipient = new stdClass();
-                $recipient->email = $admin_email;
-                $recipient->id = -99; // Dummy user id
-                $recipient->firstname = 'PSA';
-                $recipient->lastname = 'Moodle';
-                
-                // Send the email
-                email_to_user($recipient, $dummyuser, $subject, $message);
-            }
-        }
-    }
 }
