@@ -37,23 +37,19 @@ class observer {
                         // back to ELM for processing.
 
                         // Get the course ID Number to match ELM's course_id 
-                        $courseidnumber = $course->idnumber;
+                        $elmcourseid = $course->idnumber;
 
                         // Get user idnumber.
                         $user = $DB->get_record('user', ['id' => $userid], 'idnumber, firstname, lastname, email');
                         
-                        // Get enrolment_id value from local_psaelmsync_enrol table.
-                        // $elm_enrolment_id = $DB->get_field('local_psaelmsync_enrol', 'elm_enrolment_id', [
-                        //     'course_id' => $courseid,
-                        //     'userid' => $userid
-                        // ]);
                         // Get enrolment_id and another field (e.g., status) from local_psaelmsync_enrol table.
-                        $deets = $DB->get_record('local_psaelmsync_enrol', ['course_id' => $courseid, 'user_id' => $userid], 'elm_enrolment_id, class_code, sha256hash');
+                        $deets = $DB->get_record('local_psaelmsync_enrol', ['course_id' => $elmcourseid, 'user_id' => $userid], 'elm_enrolment_id, class_code, sha256hash');
 
                         if (!$deets) {
                             error_log('Issue getting records from local_psaelmsync_enrol');
                             // Send an email to an admin
-                            $error = 'User ID: ' . $userid . '. Could not find an associated record in local_psaelmsync_enrol for this completion.';
+                            $error = 'User ID: ' . $userid . '. Course ID: ' . $courseid . '. ELM Course ID: ' . $elmcourseid . '. ';
+                            $error .= 'Could not find an associated record in local_psaelmsync_enrol for this completion.';
                             send_failure_notification('enrollookup', $user->firstname, $user->lastname, $user->email, $error);
                             exit;
                         }
@@ -94,7 +90,7 @@ class observer {
                             // 'enrolment_id' => (int) $elm_enrolment_id, 
                             'USER_STATE' => 'Active',
                             'USER_EFFECTIVE_DATE' => '2017-02-14',
-                            'COURSE_IDENTIFIER' => (int) $courseidnumber, 
+                            'COURSE_IDENTIFIER' => (int) $elmcourseid, 
                             'COURSE_SHORTNAME' => $class_code, 
                             'EMAIL' => $user->email,
                             'GUID' => $user->idnumber,
@@ -121,7 +117,7 @@ class observer {
                             'record_id' => $record_id,
                             'record_date_created' => $datecreated,
                             'sha256hash' => $sha256hash,
-                            'course_id' => $courseid,
+                            'course_id' => $elmcourseid,
                             'class_code' => $class_code,
                             'course_name' => $course->fullname,
                             'user_id' => $userid,
