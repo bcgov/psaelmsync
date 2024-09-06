@@ -172,6 +172,7 @@ function process_enrolment_record($record) {
         log_record($record_id, 
                     $hash, 
                     $record_date_created, 
+                    0, // we don't have it to provide.
                     $elm_course_id, 
                     $class_code, 
                     $enrolment_id, 
@@ -220,6 +221,7 @@ function process_enrolment_record($record) {
                         $hash, 
                         $record_date_created, 
                         $course->id, 
+                        $elm_course_id, 
                         $class_code, 
                         $enrolment_id, 
                         0, // No user ID since creation failed
@@ -241,7 +243,11 @@ function process_enrolment_record($record) {
 
     if ($enrolment_status == 'Enrol') {
         // Enrol the user in the course.
-        enrol_user_in_course($user_id, $course->id, $elm_course_id, $enrolment_id, $hash, $record_id, $class_code);
+        $enrol = enrol_get_plugin('manual');
+        if ($enrol) {
+            $instance = $DB->get_record('enrol', array('courseid' => $course->id, 'enrol' => 'manual'), '*', MUST_EXIST);
+            $enrol->enrol_user($instance, $user_id, $instance->roleid);
+        }
 
         send_welcome_email($user, $course);
 
@@ -249,6 +255,7 @@ function process_enrolment_record($record) {
                     $hash, 
                     $record_date_created, 
                     $course->id, 
+                    $elm_course_id, 
                     $class_code, 
                     $enrolment_id, 
                     $user_id, 
@@ -271,7 +278,8 @@ function process_enrolment_record($record) {
         log_record($record_id, 
                     $hash, 
                     $record_date_created, 
-                    $course->id, 
+                    $course->id,
+                    $elm_course_id, 
                     $class_code, 
                     $enrolment_id, 
                     $user_id, 
@@ -311,32 +319,6 @@ function create_user($first_name, $last_name, $email, $guid) {
     $user->id = $user_id;
 
     return $user;
-}
-
-function enrol_user_in_course($user_id, $course_id, $elm_course_id, $enrolment_id, $hash, $record_id, $class_code) {
-    global $DB;
-
-    $enrol = enrol_get_plugin('manual');
-    if ($enrol) {
-        
-        $instance = $DB->get_record('enrol', array('courseid' => $course_id, 'enrol' => 'manual'), '*', MUST_EXIST);
-        $enrol->enrol_user($instance, $user_id, $instance->roleid);
-
-        // Store the custom enrolment ID in the enrol table.
-        $custom_enrolment = new stdClass();
-        $custom_enrolment->user_id = $user_id;
-        $custom_enrolment->record_id = $record_id;
-        $custom_enrolment->enrol_status = 'Enrol';
-        $custom_enrolment->sha256hash = $hash;
-        $custom_enrolment->enrolid = $instance->id;
-        $custom_enrolment->elm_enrolment_id = $enrolment_id;
-        $custom_enrolment->course_id = $elm_course_id;
-        $custom_enrolment->class_code =  $class_code;
-        $custom_enrolment->timecreated = time();
-        $custom_enrolment->timemodified = time();
-        $DB->insert_record('local_psaelmsync_enrol', $custom_enrolment);
-
-    }
 }
 
 function suspend_user_in_course($user_id, $course_id, $elm_course_id) {
@@ -393,7 +375,7 @@ function send_welcome_email($user, $course) {
     email_to_user($user, core_user::get_support_user(), $subject, $plaintext_message, $html_message);
 }
 
-function log_record($record_id, $hash, $record_date_created, $course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
+function log_record($record_id, $hash, $record_date_created, $course_id, $elm_course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
     global $DB;
 
     // Ensure course_id is valid before lookup
@@ -409,6 +391,7 @@ function log_record($record_id, $hash, $record_date_created, $course_id, $class_
     $log->sha256hash = $hash;
     $log->record_date_created = $record_date_created;
     $log->course_id = $course_id;
+    $log->elm_course_id = $elm_course_id;
     $log->class_code = $class_code;
     $log->course_name = $coursefullname;
     $log->user_id = $user_id;

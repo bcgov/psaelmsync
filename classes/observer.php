@@ -45,7 +45,7 @@ class observer {
                         $user = $DB->get_record('user', ['id' => $userid], 'idnumber, firstname, lastname, email');
                         
                         // Get enrolment_id and another field (e.g., status) from local_psaelmsync_enrol table.
-                        $deets = $DB->get_record('local_psaelmsync_enrol', ['course_id' => $elmcourseid, 'user_id' => $userid], 'elm_enrolment_id, class_code, sha256hash');
+                        $deets = $DB->get_record('local_psaelmsync_logs', ['elm_course_id' => $elmcourseid, 'user_id' => $userid], 'elm_enrolment_id, class_code, sha256hash');
 
                         if (!$deets) {
 
@@ -152,7 +152,8 @@ class observer {
                             'record_id' => $record_id,
                             'record_date_created' => $datecreated,
                             'sha256hash' => $sha256hash,
-                            'course_id' => $elmcourseid,
+                            'course_id' => $courseid,
+                            'elm_course_id' => $elmcourseid,
                             'class_code' => $class_code,
                             'course_name' => $course->fullname,
                             'user_id' => $userid,
@@ -168,22 +169,6 @@ class observer {
                         
                         $DB->insert_record('local_psaelmsync_logs', (object)$log);
 
-                        // // Update the associated record in the local_psaelmsync_enrol table.
-                        $deets->enrol_status = 'Complete';
-                        $deets->timemodified = time();
-
-                        try {
-
-                            $DB->update_record('local_psaelmsync_enrol', $deets);
-
-                        } catch (Exception $e) {
-
-                            error_log('Failed to update local_psaelmsync_enrol: ' . $e->getMessage());
-                            // #TODO handle the exception appropriately
-                            exit;
-                        }
-
-                        
                     }
                 }
             }
