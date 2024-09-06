@@ -29,7 +29,8 @@ function local_psaelmsync_sync() {
         'HEADER' => 0,
         'FAILONERROR' => 1,
     );
-    $header = array('x-cdata-authtoken: ' . $apitoken);
+    // $header = array('x-cdata-authtoken: ' . $apitoken);
+    $header = array();
     $curl = new curl();
     $curl->setHeader($header);
     $response = $curl->get($apiurlfiltered, $options);
