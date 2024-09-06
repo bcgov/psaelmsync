@@ -21,7 +21,7 @@ function local_psaelmsync_sync() {
     $mins = '-' . $datefilter . ' minutes';
     $time_minus_mins = date('Y-m-d H:i:s', strtotime($mins));
     $encoded_time = urlencode($time_minus_mins);
-    $apiurlfiltered = $apiurl; // . '&%24filter=date_created+gt+%27' . $encoded_time .'%27';
+    $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $encoded_time .'%27';
 
     // Make API call.
     $options = array(
@@ -29,8 +29,7 @@ function local_psaelmsync_sync() {
         'HEADER' => 0,
         'FAILONERROR' => 1,
     );
-    // $header = array('x-cdata-authtoken: ' . $apitoken);
-    $header = array();
+    $header = array('x-cdata-authtoken: ' . $apitoken);
     $curl = new curl();
     $curl->setHeader($header);
     $response = $curl->get($apiurlfiltered, $options);
@@ -52,7 +51,7 @@ function local_psaelmsync_sync() {
     // but it is important that we process them in chronological order so we 
     // double-do it here. Removing this would be an easy optimization if that
     // becomes necessary.
-    usort($data['records'], function ($a, $b) {
+    usort($data['value'], function ($a, $b) {
         return strtotime($a['date_created']) - strtotime($b['date_created']);
     });
 
