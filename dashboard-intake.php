@@ -142,6 +142,12 @@ document.addEventListener('DOMContentLoaded', function () {
     <div class="col-md-12">
         <p>Runs where there was at least 1 enrolment, drop, or error. 
             Runs with no actions are still logged, just not shown here.</p>
+        <p>The cron job for intake happens every 10 minutes, on the 5, 
+            between the hours of 06:00 and 18:00; 
+            09:05, 09:15, 09:25, 09:35, etc.</p>
+        <p>At most, there will be 72 intake runs a day (6 an hour for 12 hours).</p>
+        <p>This page shows the past 100 runs, with each page representing about
+            a day and a half worth of enrolment day.</p>
         <div style="height: 320px;">
             <canvas id="runsChart"></canvas>
         </div>
