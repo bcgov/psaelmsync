@@ -44,7 +44,7 @@ class observer {
                         // Get user idnumber.
                         $user = $DB->get_record('user', ['id' => $userid], 'idnumber, firstname, lastname, email');
                         
-                        // Get enrolment_id and another field (e.g., status) from local_psaelmsync_enrol table.
+                        // Get enrolment_id and another field (e.g., status) from local_psaelmsync_logs table.
                         $deets = $DB->get_record('local_psaelmsync_logs', ['elm_course_id' => $elmcourseid, 'user_id' => $userid], 'elm_enrolment_id, class_code, sha256hash');
 
                         if (!$deets) {
@@ -61,7 +61,7 @@ class observer {
                                 $message = $user->firstname . ' ' . $user->lastname . ': https://learning.gww.gov.bc.ca/user/view.php?id=' . $userid . '\n';
                                 $message .= $coursename . ': https://learning.gww.gov.bc.ca/course/view.php?id=' . $courseid . '\n';
                                 $message .= 'ELM Course ID: ' . $elmcourseid . '\n';
-                                $message .= 'Could not find an associated record in local_psaelmsync_enrol for this completion.';
+                                $message .= 'Could not find an associated record in local_psaelmsync_logs for this completion.';
                                 
                                 // Create a dummy user object for sending the email
                                 $dummyuser = new stdClass();

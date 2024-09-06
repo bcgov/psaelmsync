@@ -21,7 +21,7 @@ function local_psaelmsync_sync() {
     $mins = '-' . $datefilter . ' minutes';
     $time_minus_mins = date('Y-m-d H:i:s', strtotime($mins));
     $encoded_time = urlencode($time_minus_mins);
-    $apiurlfiltered = $apiurl . '&%24filter=date_created+gt+%27' . $encoded_time .'%27';
+    $apiurlfiltered = $apiurl; // . '&%24filter=date_created+gt+%27' . $encoded_time .'%27';
 
     // Make API call.
     $options = array(
@@ -51,7 +51,7 @@ function local_psaelmsync_sync() {
     // but it is important that we process them in chronological order so we 
     // double-do it here. Removing this would be an easy optimization if that
     // becomes necessary.
-    usort($data['value'], function ($a, $b) {
+    usort($data['records'], function ($a, $b) {
         return strtotime($a['date_created']) - strtotime($b['date_created']);
     });
 
@@ -324,7 +324,6 @@ function create_user($first_name, $last_name, $email, $guid) {
 function suspend_user_in_course($user_id, $course_id, $elm_course_id) {
     global $DB;
 
-    // Step 1: Suspend the user in the course.
     $enrol_instance = $DB->get_record('enrol', array('courseid' => $course_id, 'enrol' => 'manual'), '*', IGNORE_MISSING);
     if ($enrol_instance) {
         $user_enrolment = $DB->get_record('user_enrolments', array('enrolid' => $enrol_instance->id, 'userid' => $user_id), '*', IGNORE_MISSING);
@@ -333,14 +332,6 @@ function suspend_user_in_course($user_id, $course_id, $elm_course_id) {
             $user_enrolment->timemodified = time();
             $DB->update_record('user_enrolments', $user_enrolment);
         }
-    }
-
-    // Step 2: Update the associated record in the local_psaelmsync_enrol table.
-    $sync_enrolment = $DB->get_record('local_psaelmsync_enrol', array('user_id' => $user_id, 'course_id' => $elm_course_id), '*', IGNORE_MISSING);
-    if ($sync_enrolment) {
-        $sync_enrolment->enrol_status = 'Suspend';
-        $sync_enrolment->timemodified = time();
-        $DB->update_record('local_psaelmsync_enrol', $sync_enrolment);
     }
 }
 

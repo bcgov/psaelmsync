@@ -58,3 +58,4 @@ $string['to'] = 'To Date';
 $string['submit'] = 'Submit';
 $string['noresults'] = 'No data found for the selected dates.';
 $string['completion_opt_in'] = 'Course Completion';
+$string['elm_course_id'] = 'ELM Course ID';
