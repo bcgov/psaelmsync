@@ -42,6 +42,9 @@ $courses = $DB->get_records_sql("
     <li class="nav-item">
         <a class="nav-link" href="/local/psaelmsync/dashboard-intake.php">Intake Run Dashboard</a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/local/psaelmsync/query_api.php">Manual Processing</a>
+    </li>
 </ul>
 
 <p>This dashboard is a work in progress. It is only meant to give a count of the 

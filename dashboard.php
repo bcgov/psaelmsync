@@ -30,6 +30,9 @@ echo $OUTPUT->header();
     <li class="nav-item">
         <a class="nav-link" href="/local/psaelmsync/dashboard-intake.php">Intake Run History</a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/local/psaelmsync/query_api.php">Manual Processing</a>
+    </li>
 </ul>
 <!-- Search Form -->
 <form method="get" action="dashboard.php" class="mt-3">
