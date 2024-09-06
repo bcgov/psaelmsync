@@ -186,7 +186,24 @@ function send_welcome_email($user, $course) {
 }
 
 ?>
-
+<!-- Tabbed Navigation -->
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/settings.php?section=local_psaelmsync">Settings</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/local/psaelmsync/dashboard.php">Learner Dashboard</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/local/psaelmsync/dashboard-courses.php">Course Dashboard</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/local/psaelmsync/dashboard-intake.php">Intake Run History</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="/local/psaelmsync/query_api.php">Manual Processing</a>
+    </li>
+</ul>
 <!-- Form to input the 'from' and 'to' dates -->
 <form method="post" action="<?php echo $PAGE->url; ?>" class="mb-3">
     <div class="row">
