@@ -132,7 +132,7 @@ function process_enrolment_record($record) {
     $enrolment_id = floor(microtime(true) * 1000);// $record['USER_STATE'];
     // The rest map to CData fields
     $record_date_created = $record['date_created'];
-    $course_id = (int) $record['COURSE_IDENTIFIER'];
+    $elm_course_id = (int) $record['COURSE_IDENTIFIER'];
     $enrolment_status = $record['COURSE_STATE'];
     $class_code = $record['COURSE_SHORTNAME'];
     $user_first_name = $record['FIRST_NAME'];
@@ -148,7 +148,7 @@ function process_enrolment_record($record) {
     // data included does a good enough job for now. Two identical records coming 
     // through is enough of an edge case and wouldn't really have an adverse
     // effect anyhow.
-    $hash_content = $record_date_created . $course_id . $class_code . $enrolment_status . $user_guid . $user_email;
+    $hash_content = $record_date_created . $elm_course_id . $class_code . $enrolment_status . $user_guid . $user_email;
     $hash = hash('sha256', $hash_content);
     // This is expensive part of doing it this way where we touch the database  
     // for every single record in the feed, but it's probably the least expensive 
@@ -166,13 +166,13 @@ function process_enrolment_record($record) {
     // If there's no course with this IDNumber (note: not the Moodle course ID 
     // but ELM's course ID), skip record. We want to log that this is happening 
     // and send an email to the admin list.
-    if (!$course = $DB->get_record('course', array('idnumber' => $course_id))) {
+    if (!$course = $DB->get_record('course', array('idnumber' => $elm_course_id))) {
         // We haven't done a user lookup yet so 
         $user_id = 0;
         log_record($record_id, 
                     $hash, 
                     $record_date_created, 
-                    $course_id, 
+                    $elm_course_id, 
                     $class_code, 
                     $enrolment_id, 
                     $user_id, 
@@ -183,7 +183,7 @@ function process_enrolment_record($record) {
                     'Course not found',
                     'Error');
         
-        send_failure_notification('coursefail', $user_first_name, $user_last_name, $user_email, $course_id);
+        send_failure_notification('coursefail', $user_first_name, $user_last_name, $user_email, $elm_course_id);
         $e = 'Error';
         return $e;
     }
@@ -241,7 +241,7 @@ function process_enrolment_record($record) {
 
     if ($enrolment_status == 'Enrol') {
         // Enrol the user in the course.
-        enrol_user_in_course($user_id, $course->id, $enrolment_id, $hash, $record_id, $class_code);
+        enrol_user_in_course($user_id, $course->id, $elm_course_id, $enrolment_id, $hash, $record_id, $class_code);
 
         send_welcome_email($user, $course);
 
@@ -261,7 +261,7 @@ function process_enrolment_record($record) {
 
     } elseif ($enrolment_status == 'Suspend') {
         // Suspend the user in the course.
-        suspend_user_in_course($user_id, $course->id);
+        suspend_user_in_course($user_id, $course->id, $elm_course_id);
 
         // #TODO send a drop email?? ya!
         // #TODO should we do a further lookup here and,
@@ -313,7 +313,7 @@ function create_user($first_name, $last_name, $email, $guid) {
     return $user;
 }
 
-function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $record_id, $class_code) {
+function enrol_user_in_course($user_id, $course_id, $elm_course_id, $enrolment_id, $hash, $record_id, $class_code) {
     global $DB;
 
     $enrol = enrol_get_plugin('manual');
@@ -330,7 +330,7 @@ function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $recor
         $custom_enrolment->sha256hash = $hash;
         $custom_enrolment->enrolid = $instance->id;
         $custom_enrolment->elm_enrolment_id = $enrolment_id;
-        $custom_enrolment->course_id = $course_id;
+        $custom_enrolment->course_id = $elm_course_id;
         $custom_enrolment->class_code =  $class_code;
         $custom_enrolment->timecreated = time();
         $custom_enrolment->timemodified = time();
@@ -339,7 +339,7 @@ function enrol_user_in_course($user_id, $course_id, $enrolment_id, $hash, $recor
     }
 }
 
-function suspend_user_in_course($user_id, $course_id) {
+function suspend_user_in_course($user_id, $course_id, $elm_course_id) {
     global $DB;
 
     // Step 1: Suspend the user in the course.
@@ -354,7 +354,7 @@ function suspend_user_in_course($user_id, $course_id) {
     }
 
     // Step 2: Update the associated record in the local_psaelmsync_enrol table.
-    $sync_enrolment = $DB->get_record('local_psaelmsync_enrol', array('user_id' => $user_id, 'course_id' => $course_id), '*', IGNORE_MISSING);
+    $sync_enrolment = $DB->get_record('local_psaelmsync_enrol', array('user_id' => $user_id, 'course_id' => $elm_course_id), '*', IGNORE_MISSING);
     if ($sync_enrolment) {
         $sync_enrolment->enrol_status = 'Suspend';
         $sync_enrolment->timemodified = time();
