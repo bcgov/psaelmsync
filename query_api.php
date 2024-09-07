@@ -70,10 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Enroll the user
                         $manual_enrol->enrol_user($manual_instance, $user->id, $manual_instance->roleid, time());
 
-
-                        // #TODO Log it!!
-
-
+                        // Log it!!
                         log_record($record_id, 
                                     $hash, 
                                     $record_date_created, 
@@ -101,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
 
                         $feedback = "Invalid course state.";
-                        
+
                     }
                 } else {
                     $feedback = "No manual enrolment instance found for the course.";

@@ -76,6 +76,8 @@ foreach ($courses as $course) {
                 $record->sha256hash = hash('sha256', $user->id . $course->id . $course->idnumber);
                 $record->timecreated = time();
                 $record->timemodified = time();
+                $record->action = 'Enrol';
+                $record->status = 'Success';
 
                 $DB->insert_record('local_psaelmsync_logs', $record);
                 $inserted++;
