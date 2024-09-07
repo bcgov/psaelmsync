@@ -102,7 +102,7 @@ foreach ($courses as $course) {
                             $user->lastname, 
                             $user->email, 
                             $user->idnumber,
-                            'Enrol', 
+                            'Imported', 
                             'Success');
 
 
