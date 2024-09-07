@@ -56,9 +56,9 @@ foreach ($courses as $course) {
         $is_complete = $completion->is_course_complete($user->id);
 
         if (!$is_complete) {
-            // Check if the record already exists in local_psaelmsync_enrol
-            $exists = $DB->record_exists('local_psaelmsync_enrol', [
-                'course_id' => $course->idnumber,
+            // Check if the record already exists in local_psaelmsync_logs
+            $exists = $DB->record_exists('local_psaelmsync_logs', [
+                'elm_course_id' => $course->idnumber,
                 'user_id' => $user->id
             ]);
 
@@ -67,7 +67,8 @@ foreach ($courses as $course) {
                 $enrid = floor(microtime(true) * 1000);
                 $record = new stdClass();
                 $record->record_id = $enrid;
-                $record->course_id = $course->idnumber;
+                $record->course_id = $course->id;
+                $record->elm_course_id = $course->idnumber;
                 $record->user_id = $user->id;
                 $record->enrol_status = 'Enrol';
                 $record->elm_enrolment_id = $enrid;
@@ -76,7 +77,7 @@ foreach ($courses as $course) {
                 $record->timecreated = time();
                 $record->timemodified = time();
 
-                $DB->insert_record('local_psaelmsync_enrol', $record);
+                $DB->insert_record('local_psaelmsync_logs', $record);
                 $inserted++;
             }
         }
