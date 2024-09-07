@@ -191,6 +191,7 @@ function send_welcome_email($user, $course) {
         <a class="nav-link active" href="/local/psaelmsync/query_api.php">Manual Processing</a>
     </li>
 </ul>
+<p><?= $apiurlfiltered ?></p>
 <!-- Form to input the 'from' and 'to' dates -->
 <form method="post" action="<?php echo $PAGE->url; ?>" class="mb-3">
     <div class="row">
