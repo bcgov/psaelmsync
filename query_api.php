@@ -71,21 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $manual_enrol->enrol_user($manual_instance, $user->id, $manual_instance->roleid, time());
 
 
-                        
-
-                        // Store the custom enrolment ID in the enrol table.
-                        $custom_enrolment = new stdClass();
-                        $custom_enrolment->user_id = $user->id;
-                        $custom_enrolment->record_id = $record_id;
-                        $custom_enrolment->enrol_status = 'Enrol';
-                        $custom_enrolment->sha256hash = $hash;
-                        $custom_enrolment->enrolid = $instance->id;
-                        $custom_enrolment->elm_enrolment_id = $enrolment_id;
-                        $custom_enrolment->course_id = $elm_course_id;
-                        $custom_enrolment->class_code =  $class_code;
-                        $custom_enrolment->timecreated = time();
-                        $custom_enrolment->timemodified = time();
-                        $DB->insert_record('local_psaelmsync_enrol', $custom_enrolment);
+                        // #TODO Log it!!
 
 
 
@@ -111,7 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $to = required_param('to', PARAM_TEXT);
 
         // Build the API URL with date filters
-        $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to);
+        // $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to); // MOCK API format
+        $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "+and+date_created+lt+%27" . urlencode($to) . '%27';
 
         // Use cURL to query the API
         $curl = new curl();
