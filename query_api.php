@@ -26,6 +26,7 @@ $feedback = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['process'])) {
         // Processing a single record
+        $record_date_created = required_param('record_date_created', PARAM_TEXT);
         $course_identifier = required_param('course_identifier', PARAM_TEXT);
         $course_state = required_param('course_state', PARAM_TEXT);
         $guid = required_param('guid', PARAM_TEXT);
@@ -218,7 +219,7 @@ function create_new_user($email, $first_name, $last_name) {
 <!-- Result section where the fetched records will be displayed -->
 <?php
 if (!empty($data)) {
-    if (isset($data['records']) && count($data['records']) > 0) {
+    if (isset($data['value']) && count($data['value']) > 0) {
         // Display the results in a table
         echo '<table class="table table-striped table-bordered">';
         echo '<thead>';
@@ -240,7 +241,7 @@ if (!empty($data)) {
         echo '<tbody>';
 
         // Loop through the records and display them
-        foreach ($data['records'] as $record) {
+        foreach ($data['value'] as $record) {
             // Find the user by email
             $user = $DB->get_record('user', ['email' => $record['EMAIL']]);
             $enrol_status = 'Not Enrolled';
