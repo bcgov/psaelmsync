@@ -13,6 +13,7 @@ $PAGE->set_title(get_string('pluginname', 'local_psaelmsync') . ' - ' . get_stri
 $PAGE->set_heading(get_string('queryapi', 'local_psaelmsync'));
 
 $apiurl = get_config('local_psaelmsync', 'apiurl'); // Fetch the API URL from plugin settings
+$apitoken = get_config('local_psaelmsync', 'apitoken');
 
 echo $OUTPUT->header();
 
@@ -117,19 +118,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to); // MOCK API format
         $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "%27+and+date_created+lt+%27" . urlencode($to) . '%27';
 
-        // Use cURL to query the API
-        $curl = new curl();
-        $options = array(
-            'CURLOPT_RETURNTRANSFER' => true,
-            'CURLOPT_HTTPHEADER' => array('Content-Type: application/json')
-        );
-        $response = $curl->get($apiurlfiltered, $options);
 
+        // Make API call.
+        $options = array(
+            'RETURNTRANSFER' => 1,
+            'HEADER' => 0,
+            'FAILONERROR' => 1,
+        );
+        $header = array('x-cdata-authtoken: ' . $apitoken);
+        $curl = new curl();
+        $curl->setHeader($header);
+        $response = $curl->get($apiurlfiltered, $options);
+        
         // Check for cURL errors
         if ($curl->get_errno()) {
             echo '<div class="alert alert-danger">Error: Unable to fetch data from API.</div>';
         } else {
+            print_r($response);
             $data = json_decode($response, true); // Decode the JSON response
+
         }
     }
 }
