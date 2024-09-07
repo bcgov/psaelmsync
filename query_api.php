@@ -77,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         $feedback = "User {$user->email} has been enrolled in the course.";
                         send_welcome_email($user, $course); // Send the welcome email
+
                     } elseif ($course_state === 'Suspend') {
                         // Suspend the user enrolment
                         $manual_enrol->update_user_enrol($manual_instance, $user->id, ENROL_USER_SUSPENDED);
@@ -98,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Build the API URL with date filters
         // $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to); // MOCK API format
-        $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "+and+date_created+lt+%27" . urlencode($to) . '%27';
+        $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "%27+and+date_created+lt+%27" . urlencode($to) . '%27';
 
         // Use cURL to query the API
         $curl = new curl();
