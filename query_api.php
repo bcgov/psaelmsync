@@ -115,10 +115,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Build the API URL with date filters
         $from = required_param('from', PARAM_TEXT);
         $to = required_param('to', PARAM_TEXT);
-        $email = required_param('email', PARAM_TEXT);
-        if(!empty($email)) {
+        $emaillookup = required_param('emaillookup', PARAM_TEXT);
+        if(!empty($emaillookup)) {
             // $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to); // MOCK API format
-            $apiurlfiltered = $apiurl . "&%24filter=email+eq+%27" . urlencode($email) . "%27";
+            $apiurlfiltered = $apiurl . "&%24filter=email+eq+%27" . urlencode($emaillookup) . "%27";
         } else {
             $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "%27+and+date_created+lt+%27" . urlencode($to) . '%27';
         }
@@ -218,15 +218,15 @@ function create_new_user($email, $first_name, $last_name) {
     <div class="row">
     <div class="form-group col-2">
         <label for="from"><?php echo get_string('from', 'local_psaelmsync'); ?></label>
-        <input type="datetime-local" id="from" name="from" class="form-control" required value="<?php echo s($from); ?>">
+        <input type="datetime-local" id="from" name="from" class="form-control" value="<?php echo s($from); ?>">
     </div>
     <div class="form-group col-2">
         <label for="to"><?php echo get_string('to', 'local_psaelmsync'); ?></label>
-        <input type="datetime-local" id="to" name="to" class="form-control" required value="<?php echo s($to); ?>">
+        <input type="datetime-local" id="to" name="to" class="form-control" value="<?php echo s($to); ?>">
     </div>
     <div class="form-group col-2">
-        <label for="email"><?php echo get_string('email_cdata_lookup', 'local_psaelmsync'); ?></label>
-        <input type="email" id="to" name="to" class="form-control" required value="<?php echo s($email); ?>">
+        <label for="emaillookup"><?php echo get_string('email_cdata_lookup', 'local_psaelmsync'); ?></label>
+        <input type="email" id="emaillookup" name="emaillookup" class="form-control" value="<?php echo s($emaillookup); ?>">
     </div>
     </div>
     <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
