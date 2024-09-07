@@ -74,8 +74,7 @@ foreach ($courses as $course) {
                 $record->elm_enrolment_id = $enrid;
                 $record->class_code = $itemcode; // Use the custom field 'itemcode' as the class code
                 $record->sha256hash = hash('sha256', $user->id . $course->id . $course->idnumber);
-                $record->timecreated = time();
-                $record->timemodified = time();
+                $record->timestamp = time();
                 $record->action = 'Enrol';
                 $record->status = 'Success';
 
