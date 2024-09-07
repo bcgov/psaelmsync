@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($curl->get_errno()) {
             echo '<div class="alert alert-danger">Error: Unable to fetch data from API.</div>';
         } else {
-            print_r($response);
+            
             $data = json_decode($response, true); // Decode the JSON response
 
         }
