@@ -1,5 +1,6 @@
 <?php
 require_once('../../config.php');
+require_once($CFG->dirroot . '/local/psaelmsync/lib.php'); // Include lib.php
 require_login();
 
 global $DB, $PAGE, $OUTPUT;
