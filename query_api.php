@@ -74,7 +74,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // #TODO Log it!!
 
 
+                        log_record($record_id, 
+                                    $hash, 
+                                    $record_date_created, 
+                                    $course->id, 
+                                    $course_identifier, 
+                                    $class_code, 
+                                    $enrolment_id, 
+                                    $user_id, 
+                                    $first_name, 
+                                    $last_name, 
+                                    $email, 
+                                    $guid, 
+                                    'Enrol', 
+                                    'Success');
 
+                                    
                         $feedback = "User {$user->email} has been enrolled in the course.";
                         send_welcome_email($user, $course); // Send the welcome email
 
@@ -82,8 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Suspend the user enrolment
                         $manual_enrol->update_user_enrol($manual_instance, $user->id, ENROL_USER_SUSPENDED);
                         $feedback = "User {$user->email} has been suspended from the course.";
+
                     } else {
+
                         $feedback = "Invalid course state.";
+                        
                     }
                 } else {
                     $feedback = "No manual enrolment instance found for the course.";
@@ -163,15 +181,6 @@ function create_new_user($email, $first_name, $last_name) {
     return $DB->insert_record('user', $user) ? $DB->get_record('user', ['email' => $email]) : false;
 }
 
-// Helper function to send a welcome email
-function send_welcome_email($user, $course) {
-    global $CFG;
-
-    $subject = "Welcome to {$course->fullname}";
-    $message = "Dear {$user->firstname},\n\nWelcome to {$course->fullname}.\n\nYou can access the course here: {$CFG->wwwroot}/course/view.php?id={$course->id}\n\nBest regards,\nThe Team";
-
-    email_to_user($user, $CFG->supportname, $subject, $message);
-}
 
 ?>
 <!-- Tabbed Navigation -->
