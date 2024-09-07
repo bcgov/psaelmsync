@@ -42,7 +42,7 @@ foreach ($courses as $course) {
     $enrolled_users = get_enrolled_users(context_course::instance($course->id));
 
     // Fetch the 'itemcode' custom field for this course
-    $itemcode = $DB->get_field_sql("
+    $class_code = $DB->get_field_sql("
         SELECT cfd.value
         FROM {customfield_data} cfd
         JOIN {customfield_field} cff ON cff.id = cfd.fieldid
@@ -63,22 +63,48 @@ foreach ($courses as $course) {
             ]);
 
             if (!$exists) {
-                // Insert record into local_psaelmsync_enrol
-                $enrid = floor(microtime(true) * 1000);
-                $record = new stdClass();
-                $record->record_id = $enrid;
-                $record->course_id = $course->id;
-                $record->elm_course_id = $course->idnumber;
-                $record->user_id = $user->id;
-                $record->enrol_status = 'Enrol';
-                $record->elm_enrolment_id = $enrid;
-                $record->class_code = $itemcode; // Use the custom field 'itemcode' as the class code
-                $record->sha256hash = hash('sha256', $user->id . $course->id . $course->idnumber);
-                $record->timestamp = time();
-                $record->action = 'Enrol';
-                $record->status = 'Success';
 
-                $DB->insert_record('local_psaelmsync_logs', $record);
+                // Query the enrolment table for the enrolment date.
+                $sql = "SELECT ue.timecreated 
+                        FROM {user_enrolments} ue
+                        JOIN {enrol} e ON ue.enrolid = e.id
+                        WHERE ue.userid = :userid AND e.courseid = :courseid";
+
+                $params = [
+                    'userid' => $user->id,
+                    'courseid' => $course->id,
+                ];
+
+                // Get the enrolment time for this user.
+                $enrolment_info = $DB->get_record_sql($sql, $params);
+
+                if ($enrolment_info) {
+                    $enrolment_date = userdate($enrolment_info->timecreated); // Format date
+                    // echo "User: {$user->firstname} {$user->lastname}, Enrolment Date: {$enrolment_date}<br>";
+                }
+
+                $record_id = time();
+                $hash = hash('sha256', $user->id . $course->id . $course->idnumber);
+
+                // make it up for now.
+                $enrolment_id = floor(microtime(true) * 1000);
+
+                log_record($record_id, 
+                            $hash,
+                            $enrolment_date, 
+                            $course->id, 
+                            $course->idnumber, 
+                            $class_code, 
+                            $enrolment_id, 
+                            $user->id, 
+                            $user->first_name, 
+                            $user->last_name, 
+                            $user->email, 
+                            $user->idnumber,
+                            'Enrol', 
+                            'Success');
+
+
                 $inserted++;
             }
         }
