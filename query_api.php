@@ -111,13 +111,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } else {
         // Handle the date range form submission (API query)
-        $from = required_param('from', PARAM_TEXT);
-        $to = required_param('to', PARAM_TEXT);
 
         // Build the API URL with date filters
-        // $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to); // MOCK API format
-        $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "%27+and+date_created+lt+%27" . urlencode($to) . '%27';
+        $from = required_param('from', PARAM_TEXT);
+        $to = required_param('to', PARAM_TEXT);
+        $email = required_param('email', PARAM_TEXT);
+        if(!empty($email)) {
+            // $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to); // MOCK API format
+            $apiurlfiltered = $apiurl . "&%24filter=email+eq+%27" . urlencode($email) . "%27";
+        } else {
+            $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "%27+and+date_created+lt+%27" . urlencode($to) . '%27';
+        }
 
+        
 
         // Make API call.
         $options = array(
@@ -134,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($curl->get_errno()) {
             echo '<div class="alert alert-danger">Error: Unable to fetch data from API.</div>';
         } else {
-            
+
             $data = json_decode($response, true); // Decode the JSON response
 
         }
@@ -174,7 +180,7 @@ function create_new_user($email, $first_name, $last_name) {
     global $DB;
 
     $user = new stdClass();
-    $user->username = $email;
+    $user->username = strtolower($email);
     $user->email = $email;
     $user->firstname = $first_name;
     $user->lastname = $last_name;
@@ -217,6 +223,10 @@ function create_new_user($email, $first_name, $last_name) {
     <div class="form-group col-2">
         <label for="to"><?php echo get_string('to', 'local_psaelmsync'); ?></label>
         <input type="datetime-local" id="to" name="to" class="form-control" required value="<?php echo s($to); ?>">
+    </div>
+    <div class="form-group col-2">
+        <label for="email"><?php echo get_string('email_cdata_lookup', 'local_psaelmsync'); ?></label>
+        <input type="email" id="to" name="to" class="form-control" required value="<?php echo s($email); ?>">
     </div>
     </div>
     <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
