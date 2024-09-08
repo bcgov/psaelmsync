@@ -80,7 +80,10 @@ foreach ($courses as $course) {
                 $enrolment_info = $DB->get_record_sql($sql, $params);
 
                 if ($enrolment_info) {
-                    $enrolment_date = userdate($enrolment_info->timecreated); // Format date
+                    $datetime = new DateTime();
+                    $datetime->setTimestamp($enrolment_info->timecreated);
+                    $enrolment_date = $datetime->format(DateTime::ATOM); // ISO 8601 format
+                    // $enrolment_date = userdate($enrolment_info->timecreated); // Format date
                     // echo "User: {$user->firstname} {$user->lastname}, Enrolment Date: {$enrolment_date}<br>";
                 }
 
@@ -90,20 +93,39 @@ foreach ($courses as $course) {
                 // make it up for now.
                 $enrolment_id = floor(microtime(true) * 1000);
 
-                log_record($record_id, 
-                            $hash,
-                            $enrolment_date, 
-                            $course->id, 
-                            $course->idnumber, 
-                            $class_code, 
-                            $enrolment_id, 
-                            $user->id, 
-                            $user->firstname, 
-                            $user->lastname, 
-                            $user->email, 
-                            $user->idnumber,
-                            'Imported', 
-                            'Success');
+                // log_record($record_id, 
+                //             $hash,
+                //             $enrolment_date, 
+                //             $course->id, 
+                //             $course->idnumber, 
+                //             $class_code, 
+                //             $enrolment_id, 
+                //             $user->id, 
+                //             $user->firstname, 
+                //             $user->lastname, 
+                //             $user->email, 
+                //             $user->idnumber,
+                //             'Imported', 
+                //             'Success');
+                $log = new stdClass();
+                $log->record_id = $record_id;
+                $log->sha256hash = $hash;
+                $log->record_date_created = $enrolment_date;
+                $log->course_id = $course->id;
+                $log->elm_course_id = $course->idnumber;
+                $log->class_code = $class_code;
+                $log->course_name = $course->fullname;
+                $log->user_id = $user->id;
+                $log->user_firstname = $user->firstname;
+                $log->user_lastname = $user->lastname;
+                $log->user_guid = $user->idnumber; 
+                $log->user_email = $user->email;
+                $log->elm_enrolment_id = $enrolment_id;
+                $log->action = 'Imported';
+                $log->status = 'Success';
+                $log->timestamp = 1725411618;
+            
+                $DB->insert_record('local_psaelmsync_logs', $log);
 
 
                 $inserted++;
