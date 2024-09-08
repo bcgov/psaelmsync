@@ -62,6 +62,11 @@ class log_table extends \table_sql {
     }
 
     public function col_timestamp($values) {
-        return date('Y-m-d H:i:s' , $values->timestamp);
+        if($values->action == 'Imported') {
+            $c = date('Y-m-d H:i:s' , $values->timestamp) . '<span style="background: red; color: #FFF;" title="This record was (likely) imported using the date that Moodle listed as the enrolment datetime as the original data was not available at time of import.">!!!</span>';
+        } else {
+            $c = date('Y-m-d H:i:s' , $values->timestamp);
+        }
+        return $c;
     }
 }
