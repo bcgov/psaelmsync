@@ -43,7 +43,10 @@ $courses = $DB->get_records_sql("
         <a class="nav-link" href="/local/psaelmsync/dashboard-intake.php">Intake Run Dashboard</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/local/psaelmsync/query_api.php">Manual Processing</a>
+        <a class="nav-link" href="/local/psaelmsync/manual-intake.php">Manual Intake</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/local/psaelmsync/manual-complete.php">Manual Complete</a>
     </li>
 </ul>
 

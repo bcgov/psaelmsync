@@ -8,7 +8,7 @@ global $DB, $PAGE, $OUTPUT;
 $context = context_system::instance();
 require_capability('local/psaelmsync:viewlogs', $context);
 
-$PAGE->set_url('/local/psaelmsync/query_api.php');
+$PAGE->set_url('/local/psaelmsync/manual-intake.php');
 $PAGE->set_context($context);
 $PAGE->set_title(get_string('pluginname', 'local_psaelmsync') . ' - ' . get_string('queryapi', 'local_psaelmsync'));
 $PAGE->set_heading(get_string('queryapi', 'local_psaelmsync'));
@@ -74,20 +74,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $manual_enrol->enrol_user($manual_instance, $user->id, $manual_instance->roleid, time());
 
                         // Log it!!
-                        log_record($record_id, 
-                                    $hash, 
-                                    $record_date_created, 
-                                    $course->id, 
-                                    $course_identifier, 
-                                    $class_code, 
-                                    $enrolment_id, 
-                                    $user_id, 
-                                    $first_name, 
-                                    $last_name, 
-                                    $email, 
-                                    $guid, 
-                                    'Enrol', 
-                                    'Success');
+                        // log_record($record_id, 
+                        //             $hash, 
+                        //             $record_date_created, 
+                        //             $course->id, 
+                        //             $course_identifier, 
+                        //             $class_code, 
+                        //             $enrolment_id, 
+                        //             $user_id, 
+                        //             $first_name, 
+                        //             $last_name, 
+                        //             $email, 
+                        //             $guid, 
+                        //             'Enrol', 
+                        //             'Success');
+                        $log = new stdClass();
+                        $log->record_id = $record_id;
+                        $log->sha256hash = $hash;
+                        $log->record_date_created = $record_date_created;
+                        $log->course_id = $course->id;
+                        $log->elm_course_id = $course_identifier;
+                        $log->class_code = $class_code;
+                        $log->course_name = $course->fullname;
+                        $log->user_id = $user->id;
+                        $log->user_firstname = $user->firstname;
+                        $log->user_lastname = $user->lastname;
+                        $log->user_guid = $user->idnumber; 
+                        $log->user_email = $user->email;
+                        $log->elm_enrolment_id = $enrolment_id;
+                        $log->action = 'Enrol';
+                        $log->status = 'Success';
+                        $log->timestamp = time();
+                    
+                        $DB->insert_record('local_psaelmsync_logs', $log);
 
                                     
                         $feedback = "User {$user->email} has been enrolled in the course.";
@@ -97,20 +116,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Suspend the user enrolment
                         $manual_enrol->update_user_enrol($manual_instance, $user->id, ENROL_USER_SUSPENDED);
                         // Log it!!
-                        log_record($record_id, 
-                                    $hash, 
-                                    $record_date_created, 
-                                    $course->id, 
-                                    $course_identifier, 
-                                    $class_code, 
-                                    $enrolment_id, 
-                                    $user_id, 
-                                    $first_name, 
-                                    $last_name, 
-                                    $email, 
-                                    $guid, 
-                                    'Suspend', 
-                                    'Success');
+                        // log_record($record_id, 
+                        //             $hash, 
+                        //             $record_date_created, 
+                        //             $course->id, 
+                        //             $course_identifier, 
+                        //             $class_code, 
+                        //             $enrolment_id, 
+                        //             $user_id, 
+                        //             $first_name, 
+                        //             $last_name, 
+                        //             $email, 
+                        //             $guid, 
+                        //             'Suspend', 
+                        //             'Success');
+                        $log = new stdClass();
+                        $log->record_id = $record_id;
+                        $log->sha256hash = $hash;
+                        $log->record_date_created = $record_date_created;
+                        $log->course_id = $course->id;
+                        $log->elm_course_id = $course_identifier;
+                        $log->class_code = $class_code;
+                        $log->course_name = $course->fullname;
+                        $log->user_id = $user->id;
+                        $log->user_firstname = $user->firstname;
+                        $log->user_lastname = $user->lastname;
+                        $log->user_guid = $user->idnumber; 
+                        $log->user_email = $user->email;
+                        $log->elm_enrolment_id = $enrolment_id;
+                        $log->action = 'Suspend';
+                        $log->status = 'Success';
+                        $log->timestamp = time();
+                    
+                        $DB->insert_record('local_psaelmsync_logs', $log);
 
                         $feedback = "User {$user->email} has been suspended from the course.";
 
