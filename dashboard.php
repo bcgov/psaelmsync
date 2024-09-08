@@ -97,7 +97,9 @@ if (!empty($search)) {
 }
 
 $where = !empty($conditions) ? implode(' OR ', $conditions) : '1=1';
-$table->set_sql('*', '{local_psaelmsync_logs}', $where, $params);
+// $table->set_sql('*', '{local_psaelmsync_logs}', $where, $params);
+$table->set_sql('*', '{local_psaelmsync_logs}', $where, $params, 'timestamp DESC');
+
 
 // Define the base URL for the table.
 $table->define_baseurl($PAGE->url);
