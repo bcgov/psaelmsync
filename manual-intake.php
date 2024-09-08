@@ -74,20 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $manual_enrol->enrol_user($manual_instance, $user->id, $manual_instance->roleid, time());
 
                         // Log it!!
-                        // log_record($record_id, 
-                        //             $hash, 
-                        //             $record_date_created, 
-                        //             $course->id, 
-                        //             $course_identifier, 
-                        //             $class_code, 
-                        //             $enrolment_id, 
-                        //             $user_id, 
-                        //             $first_name, 
-                        //             $last_name, 
-                        //             $email, 
-                        //             $guid, 
-                        //             'Enrol', 
-                        //             'Success');
                         $log = new stdClass();
                         $log->record_id = $record_id;
                         $log->sha256hash = $hash;
@@ -108,28 +94,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                         $DB->insert_record('local_psaelmsync_logs', $log);
 
-                                    
                         $feedback = "User {$user->email} has been enrolled in the course.";
+
                         send_welcome_email($user, $course); // Send the welcome email
 
                     } elseif ($course_state === 'Suspend') {
                         // Suspend the user enrolment
                         $manual_enrol->update_user_enrol($manual_instance, $user->id, ENROL_USER_SUSPENDED);
+
                         // Log it!!
-                        // log_record($record_id, 
-                        //             $hash, 
-                        //             $record_date_created, 
-                        //             $course->id, 
-                        //             $course_identifier, 
-                        //             $class_code, 
-                        //             $enrolment_id, 
-                        //             $user_id, 
-                        //             $first_name, 
-                        //             $last_name, 
-                        //             $email, 
-                        //             $guid, 
-                        //             'Suspend', 
-                        //             'Success');
                         $log = new stdClass();
                         $log->record_id = $record_id;
                         $log->sha256hash = $hash;
@@ -177,8 +150,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "%27+and+date_created+lt+%27" . urlencode($to) . '%27';
         }
-
-        
 
         // Make API call.
         $options = array(
