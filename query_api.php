@@ -1,5 +1,6 @@
 <?php
 require_once('../../config.php');
+require_once($CFG->dirroot . '/local/psaelmsync/lib.php'); // Include lib.php
 require_login();
 
 global $DB, $PAGE, $OUTPUT;
@@ -95,6 +96,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } elseif ($course_state === 'Suspend') {
                         // Suspend the user enrolment
                         $manual_enrol->update_user_enrol($manual_instance, $user->id, ENROL_USER_SUSPENDED);
+                        // Log it!!
+                        log_record($record_id, 
+                                    $hash, 
+                                    $record_date_created, 
+                                    $course->id, 
+                                    $course_identifier, 
+                                    $class_code, 
+                                    $enrolment_id, 
+                                    $user_id, 
+                                    $first_name, 
+                                    $last_name, 
+                                    $email, 
+                                    $guid, 
+                                    'Suspend', 
+                                    'Success');
+
                         $feedback = "User {$user->email} has been suspended from the course.";
 
                     } else {
@@ -290,7 +307,7 @@ if (!empty($data)) {
             } else {
                 echo '<form method="post" action="' . $PAGE->url . '">';
                 echo '<input type="hidden" name="course_identifier" value="' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
-                echo '<input type="hidden" name="date_created" value="' . htmlspecialchars($record['date_created']) . '">';
+                echo '<input type="hidden" name="record_date_created" value="' . htmlspecialchars($record['date_created']) . '">';
                 echo '<input type="hidden" name="course_state" value="' . htmlspecialchars($record['COURSE_STATE']) . '">';
                 echo '<input type="hidden" name="class_code" value="' . htmlspecialchars($record['COURSE_SHORTNAME']) . '">';
                 echo '<input type="hidden" name="guid" value="' . htmlspecialchars($record['GUID']) . '">';
