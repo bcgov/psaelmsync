@@ -70,6 +70,7 @@ $courses = $DB->get_records_sql("
             $enrolments = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'action' => 'Enrol']);
             $suspends = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'action' => 'Suspend']);
             $errors = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'status' => 'Error']);
+            $completions = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'status' => 'Complete']);
             ?>
             <tr>
                 <td>
@@ -83,6 +84,7 @@ $courses = $DB->get_records_sql("
                 <td><?php echo format_string($course->idnumber); ?></td>
                 <td><?php echo ($course->completion_opt_in == 1) ? 'Opted In' : 'Not Opted In'; ?></td> <!-- Show whether course is opted in or not -->
                 <td><?php echo $enrolments; ?></td>
+                <td><?php echo $completions; ?></td>
                 <td><?php echo $suspends; ?></td>
                 <td><?php echo $errors; ?></td>
             </tr>
