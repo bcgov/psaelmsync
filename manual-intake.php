@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $log->user_lastname = $user->lastname;
                         $log->user_guid = $user->idnumber; 
                         $log->user_email = $user->email;
-                        $log->elm_enrolment_id = $enrolment_id;
+                        $log->elm_enrolment_id = time();
                         $log->action = 'Enrol';
                         $log->status = 'Success';
                         $log->timestamp = time();
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $log->user_lastname = $user->lastname;
                         $log->user_guid = $user->idnumber; 
                         $log->user_email = $user->email;
-                        $log->elm_enrolment_id = $enrolment_id;
+                        $log->elm_enrolment_id = time();
                         $log->action = 'Suspend';
                         $log->status = 'Success';
                         $log->timestamp = time();
