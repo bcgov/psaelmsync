@@ -61,6 +61,7 @@ $courses = $DB->get_records_sql("
             <th><?php echo get_string('course', 'local_psaelmsync'); ?></th>
             <th><?php echo get_string('idnumber', 'local_psaelmsync'); ?></th>
             <th><?php echo get_string('completion_opt_in', 'local_psaelmsync'); ?></th>
+            <th><?php echo get_string('completions', 'local_psaelmsync'); ?></th>
             <th><?php echo get_string('enrolments', 'local_psaelmsync'); ?></th>
             <th><?php echo get_string('suspends', 'local_psaelmsync'); ?></th>
             <th><?php echo get_string('errors', 'local_psaelmsync'); ?></th>
@@ -86,8 +87,8 @@ $courses = $DB->get_records_sql("
                 </td>
                 <td><?php echo format_string($course->idnumber); ?></td>
                 <td><?php echo ($course->completion_opt_in == 1) ? 'Opted In' : 'Not Opted In'; ?></td> <!-- Show whether course is opted in or not -->
-                <td><?php echo $enrolments; ?></td>
                 <td><?php echo $completions; ?></td>
+                <td><?php echo $enrolments; ?></td>
                 <td><?php echo $suspends; ?></td>
                 <td><?php echo $errors; ?></td>
             </tr>

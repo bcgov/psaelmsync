@@ -48,6 +48,7 @@ $string['courseenrolstats'] = 'Course Enrolment Statistics';
 $string['course'] = 'Course';
 $string['idnumber'] = 'ID Number';
 $string['enrolments'] = 'Enrolments';
+$string['completions'] = 'Completions';
 $string['suspends'] = 'Suspends';
 $string['errors'] = 'Errors';
 $string['syncenrolments'] = 'Sync Enrolments';
