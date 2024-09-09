@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // Log it!!
                         $log = new stdClass();
-                        $log->record_id = $record_id;
+                        $log->record_id = time();
                         $log->sha256hash = $hash;
                         $log->record_date_created = $record_date_created;
                         $log->course_id = $course->id;
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // Log it!!
                         $log = new stdClass();
-                        $log->record_id = $record_id;
+                        $log->record_id = time();
                         $log->sha256hash = $hash;
                         $log->record_date_created = $record_date_created;
                         $log->course_id = $course->id;
