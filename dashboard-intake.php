@@ -147,8 +147,8 @@ document.addEventListener('DOMContentLoaded', function () {
             (ELM posts to CData every 10 minutes on the 0)
             between the hours of 06:00 and 18:00; 
             09:05, 09:15, 09:25, 09:35, etc.</p>
-        <p>At most, there will be 72 intake runs a day (6 an hour for 12 hours).</p>
-        <p>This page shows the past 100 runs, with each page representing about
+        <p>At most, there will be 72 intake runs a day (6 an hour for 12 hours). 
+            This page shows the past 100 runs, with each page representing about
             a day and a half worth of enrolment day.</p>
         <div style="height: 320px;">
             <canvas id="runsChart"></canvas>
