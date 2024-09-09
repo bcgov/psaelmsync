@@ -46,10 +46,10 @@ $page = optional_param('page', 0, PARAM_INT); // Current page number
 $offset = $page * $perpage; // Calculate the offset for SQL query
 
 // Get the total count of records
-$totalcount = $DB->count_records_select('local_psaelmsync_runs', 'enrolcount > 0 OR suspendcount > 0 OR errorcount > 0');
+$totalcount = $DB->count_records_select('local_psaelmsync_runs', '');
 
 // SQL to get the most recent records with pagination.
-$sql = "SELECT * FROM {local_psaelmsync_runs} WHERE enrolcount > 0 OR suspendcount > 0 OR errorcount > 0 ORDER BY endtime DESC";
+$sql = "SELECT * FROM {local_psaelmsync_runs} ORDER BY endtime DESC";
 $lastruns = $DB->get_records_sql($sql, null, $offset, $perpage);
 
 // Prepare data for Chart.js
@@ -143,9 +143,8 @@ document.addEventListener('DOMContentLoaded', function () {
 <!-- Chart.js Chart -->
 <div class="row mb-2">
     <div class="col-md-12">
-        <p>Runs where there was at least 1 enrolment, drop, or error. 
-            Runs with no actions are still logged, just not shown here.</p>
-        <p>The cron job for intake happens every 10 minutes, on the 5, 
+        <p>The cron job for intake (from CData) happens every 10 minutes, on the 5, 
+            (ELM posts to CData every 10 minutes on the 0)
             between the hours of 06:00 and 18:00; 
             09:05, 09:15, 09:25, 09:35, etc.</p>
         <p>At most, there will be 72 intake runs a day (6 an hour for 12 hours).</p>
