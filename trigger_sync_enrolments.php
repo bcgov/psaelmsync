@@ -83,8 +83,6 @@ foreach ($courses as $course) {
                     $datetime = new DateTime();
                     $datetime->setTimestamp($enrolment_info->timecreated);
                     $enrolment_date = $datetime->format(DateTime::ATOM); // ISO 8601 format
-                    // $enrolment_date = userdate($enrolment_info->timecreated); // Format date
-                    // echo "User: {$user->firstname} {$user->lastname}, Enrolment Date: {$enrolment_date}<br>";
                 }
 
                 $record_id = time();
