@@ -67,36 +67,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                if ($manual_instance) {
+                if ($manual_instance && !empty($manual_instance->roleid)) {
                     // Based on COURSE_STATE, enroll or suspend the user
                     if ($course_state === 'Enrol') {
+
                         // Enroll the user
                         $manual_enrol->enrol_user($manual_instance, $user->id, $manual_instance->roleid, time());
+                        // Check if enrolment was successful
+                        $is_enrolled = $DB->record_exists('user_enrolments', ['userid' => $user->id, 'enrolid' => $manual_instance->id]);
+                                        
+                        if ($is_enrolled) {
+                            // Log it!!
+                            $log = new stdClass();
+                            $log->record_id = time();
+                            $log->sha256hash = $hash;
+                            $log->record_date_created = $record_date_created;
+                            $log->course_id = $course->id;
+                            $log->elm_course_id = $course_identifier;
+                            $log->class_code = $class_code;
+                            $log->course_name = $course->fullname;
+                            $log->user_id = $user->id;
+                            $log->user_firstname = $user->firstname;
+                            $log->user_lastname = $user->lastname;
+                            $log->user_guid = $user->idnumber; 
+                            $log->user_email = $user->email;
+                            $log->elm_enrolment_id = time();
+                            $log->action = 'Enrol';
+                            $log->status = 'Success';
+                            $log->timestamp = time();
+                        
+                            $DB->insert_record('local_psaelmsync_logs', $log);
 
-                        // Log it!!
-                        $log = new stdClass();
-                        $log->record_id = time();
-                        $log->sha256hash = $hash;
-                        $log->record_date_created = $record_date_created;
-                        $log->course_id = $course->id;
-                        $log->elm_course_id = $course_identifier;
-                        $log->class_code = $class_code;
-                        $log->course_name = $course->fullname;
-                        $log->user_id = $user->id;
-                        $log->user_firstname = $user->firstname;
-                        $log->user_lastname = $user->lastname;
-                        $log->user_guid = $user->idnumber; 
-                        $log->user_email = $user->email;
-                        $log->elm_enrolment_id = time();
-                        $log->action = 'Enrol';
-                        $log->status = 'Success';
-                        $log->timestamp = time();
-                    
-                        $DB->insert_record('local_psaelmsync_logs', $log);
+                            $feedback = "User {$user->email} has been enrolled in the course.";
 
-                        $feedback = "User {$user->email} has been enrolled in the course.";
-
-                        send_welcome_email($user, $course); // Send the welcome email
+                            send_welcome_email($user, $course); // Send the welcome email
+                            
+                        } else {
+                            $feedback = "Failed to enroll user {$user->email} in the course.";
+                        }
 
                     } elseif ($course_state === 'Suspend') {
                         // Suspend the user enrolment
