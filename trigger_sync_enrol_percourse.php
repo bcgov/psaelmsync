@@ -20,6 +20,8 @@ echo $OUTPUT->header();
 $inserted = 0;
 
 $courseid = required_param('courseid', PARAM_INT);
+$course = $DB->get_record('course', ['id' => $courseid]);
+$courseidnumber = $course->idnumber;
 
 // Get all enrolled users in this course
 $enrolled_users = get_enrolled_users(context_course::instance($courseid));
