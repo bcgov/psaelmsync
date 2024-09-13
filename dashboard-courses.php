@@ -74,7 +74,7 @@ $courses = $DB->get_records_sql("
             $enrolments = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'action' => 'Enrol']);
             $suspends = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'action' => 'Suspend']);
             $errors = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'status' => 'Error']);
-            $completions = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'status' => 'Complete']);
+            $completions = $DB->count_records('local_psaelmsync_logs', ['course_id' => $course->id, 'action' => 'Complete']);
             ?>
             <tr>
                 <td>
