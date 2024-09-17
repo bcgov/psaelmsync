@@ -246,7 +246,7 @@ function process_enrolment_record($record) {
         $enrol = enrol_get_plugin('manual');
         if ($enrol) {
             $instance = $DB->get_record('enrol', array('courseid' => $course->id, 'enrol' => 'manual'), '*', MUST_EXIST);
-            $enrol->enrol_user($instance, $user_id, $instance->roleid);
+            $enrol->enrol_user($instance, $user_id, $instance->roleid, 0, 0, ENROL_USER_ACTIVE);
         }
 
         send_welcome_email($user, $course);
