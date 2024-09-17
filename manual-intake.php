@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $DB->get_record('user', ['email' => $email]);
             if (!$user) {
                 // Create the new user if they don't exist
-                $user = create_new_user($email, $first_name, $last_name);
+                $user = create_new_user($email, $first_name, $last_name, $guid);
                 if (!$user) {
                     $feedback = "Failed to create a new user for email {$email}.";
                 }
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($course_state === 'Enrol') {
 
                         // Enroll the user
-                        $manual_enrol->enrol_user($manual_instance, $user->id, $manual_instance->roleid, time());
+                        $manual_enrol->enrol_user($manual_instance, $user->id, $manual_instance->roleid, 0, 0, ENROL_USER_ACTIVE);
                         // Check if enrolment was successful
                         $is_enrolled = $DB->record_exists('user_enrolments', ['userid' => $user->id, 'enrolid' => $manual_instance->id]);
                                         
@@ -210,12 +210,13 @@ function check_user_enrolment_status($courseidnumber, $userid) {
 }
 
 // Helper function to create a new user
-function create_new_user($email, $first_name, $last_name) {
+function create_new_user($email, $first_name, $last_name, $guid) {
     global $DB;
 
     $user = new stdClass();
     $user->username = strtolower($email);
     $user->email = $email;
+    $user->idnumber = $guid;
     $user->firstname = $first_name;
     $user->lastname = $last_name;
     $user->password = hash_internal_user_password(generate_password());
