@@ -75,10 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $manual_enrol->enrol_user($manual_instance, $user->id, $manual_instance->roleid, 0, 0, ENROL_USER_ACTIVE);
 
                         // Invalidate the enrolment cache for the user.
-                        cache_helper::invalidate_by_definition('core', 'userenrolments', array(), array($user->id));
-                        // Invalidate the course context cache.
-                        $context = context_course::instance($course->id);
-                        $context->mark_dirty();
+                        // cache_helper::invalidate_by_definition('core', 'userenrolments', array(), array($user->id));
+                        // // Invalidate the course context cache.
+                        // $context = context_course::instance($course->id);
+                        // $context->mark_dirty();
                         
                         // Check if enrolment was successful
                         $is_enrolled = $DB->record_exists('user_enrolments', ['userid' => $user->id, 'enrolid' => $manual_instance->id]);
@@ -118,10 +118,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $manual_enrol->update_user_enrol($manual_instance, $user->id, ENROL_USER_SUSPENDED);
 
                         // Invalidate the enrolment cache for the user.
-                        cache_helper::invalidate_by_definition('core', 'userenrolments', array(), array($user->id));
-                        // Invalidate the course context cache.
-                        $context = context_course::instance($course->id);
-                        $context->mark_dirty();
+                        // cache_helper::invalidate_by_definition('core', 'userenrolments', array(), array($user->id));
+                        // // Invalidate the course context cache.
+                        // $context = context_course::instance($course->id);
+                        // $context->mark_dirty();
 
                         // Log it!!
                         $log = new stdClass();
