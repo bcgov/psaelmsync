@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $manual_enrol->enrol_user($manual_instance, $user->id, $manual_instance->roleid, 0, 0, ENROL_USER_ACTIVE);
 
                         // Invalidate the enrolment cache for the user.
-                        cache_helper::invalidate_by_definition('core', 'user_enrolments', array(), array($user->id));
+                        cache_helper::invalidate_by_definition('core', 'userenrolments', array(), array($user->id));
                         // Invalidate the course context cache.
                         $context = context_course::instance($course->id);
                         $context->mark_dirty();
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $manual_enrol->update_user_enrol($manual_instance, $user->id, ENROL_USER_SUSPENDED);
 
                         // Invalidate the enrolment cache for the user.
-                        cache_helper::invalidate_by_definition('core', 'user_enrolments', array(), array($user->id));
+                        cache_helper::invalidate_by_definition('core', 'userenrolments', array(), array($user->id));
                         // Invalidate the course context cache.
                         $context = context_course::instance($course->id);
                         $context->mark_dirty();
