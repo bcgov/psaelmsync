@@ -241,6 +241,66 @@ function process_enrolment_record($record) {
         }
     }
 
+    // Even if we find a user by the provided GUID, we also need to check
+    // to see if the email address associated with the account is consistent
+    // with the CData record.
+    $emailmismatch = 0;
+    if ($user->email != $user_email) {
+
+        // Later on when we log this record, we'll want to indicate that this 
+        // record was not a pure "Success" ... somehow? action "Enrolled and Updated"?
+        $emailmismatch = 1;
+
+        // Generate the new username based on the new email address for comparison
+        $new_username = strtolower($user_email);
+
+        // Check if the new username already exists
+        $username_exists = $DB->record_exists('user', ['username' => $new_username]);
+
+        // Check if another user already has the new email address
+        $useremailcheck = $DB->get_record('user', ['email' => $user_email]);
+
+        $message = 'We\'ve come across a learner with an account with the given GUID, but ';
+        $message .= 'when we lookup the provided email address, it doesn\'t match and ';
+
+        if (!$useremailcheck && !$username_exists) {
+            // There isn't an existing account with this email or username
+            // Update the user's email address and username
+            $user->email = $user_email;
+            $user->username = $new_username;
+            $user->timemodified = time();
+
+            // Validate the new email and username
+            $user = validate_user_email($user);
+            $user = validate_user_username($user);
+
+            // Update the user record in the database
+            $DB->update_record('user', $user);
+
+            // Invalidate user cache/sessions if necessary
+            \core\session\manager::invalidate_user_sessions($user->id);
+
+            // Trigger user updated event
+            \core\event\user_updated::create_from_userid($user->id)->trigger();
+
+            $message .= 'there is no existing account by that email address, so we have updated the user\'s email address and username accordingly.';
+
+        } else {
+            // There is another account with this email or username
+            // The GUID is different
+            if ($useremailcheck) {
+                $message .= 'there is <a href="/user/view.php?id=' . $useremailcheck->id . '">another account</a> with this email address.';
+            }
+
+            if ($username_exists) {
+                $message .= ' Additionally, the username derived from the new email address is already in use.';
+            }
+        }
+
+        // Send the email notification
+        send_failure_notification('emailmismatch', $user_first_name, $user_last_name, $user_email, $message);
+    }
+
     if ($enrolment_status == 'Enrol') {
         // Enrol the user in the course.
         $enrol = enrol_get_plugin('manual');
@@ -423,6 +483,15 @@ function send_failure_notification($type, $first_name, $last_name, $email, $erro
             $message = "A failure occurred during course lookup.\n\n";
             $message .= "Details:\n";
             $message .= "Course ID: {$error_message}\n";
+            $message .= "Name: {$first_name} {$last_name}\n";
+            $message .= "Email: {$email}\n\n";
+            $message .= "Please investigate the issue.";
+
+        } elseif($type == 'emailmismatch') {
+
+            $subject = "User email mismatch";
+            $message = "A discrepancy was found when enrolling a user.\n\n";
+            $message .= "{$error_message}\n";
             $message .= "Name: {$first_name} {$last_name}\n";
             $message .= "Email: {$email}\n\n";
             $message .= "Please investigate the issue.";

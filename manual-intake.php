@@ -43,17 +43,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Find the course by its idnumber (COURSE_IDENTIFIER maps to idnumber)
         $course = $DB->get_record('course', ['idnumber' => $course_identifier]);
         if ($course) {
-            // Find the user by email, create if they don't exist
-            $user = $DB->get_record('user', ['email' => $email]);
+
+            // Find the user by GUID, create if they don't exist
+            $user = $DB->get_record('user', ['idnumber' => $guid]);
             if (!$user) {
                 // Create the new user if they don't exist
                 $user = create_new_user($email, $first_name, $last_name, $guid);
                 if (!$user) {
-                    $feedback = "Failed to create a new user for email {$email}.";
+                    // We can't find them via GUID but is there an account with the same email?
+                    $useremailcheck = $DB->get_record('user', ['email' => $email]);
+                    if (!$useremailcheck) {
+                        // If there is no account with the email just put out a generic error.
+                        $feedback = "Failed to create a new user for GUID {$GUID}.";
+                    } else {
+                        // If there is an account with the email
+                        $feedback = "Failed to create a new user for GUID {$GUID}, ";
+                        $feedback .= "but there is <a href='/user/view.php?id={$useremailcheck->id}'>an account</a>";
+                        $feedback .= "with that {$email}. Please investigate further.";
+                    }
                 }
             }
 
             if ($user) {
+
+                // Even if we find a user by the provided GUID, we also need to check
+                // to see if the email address associated with the account is consistent.
+                if($user->email != $email) {
+                    // OK the emails don't match. Is there another account with this addres?
+                    $useremailcheck = $DB->get_record('user', ['email' => $email]);
+                    if(!$useremailcheck) {
+                        // There isn't an existing account
+                        // Should we now attempt to update the user profile with the new email?
+                        // $feedback = "There's no account with that email {$email}.";
+                    } else {
+                        // There is another account with this email
+                        // The GUID is different
+                        // $feedback = "There's another account with this email address but a different GUID {$GUID}.";
+                    }
+
+                }
+
+
                 // Get the manual enrolment plugin
                 $manual_enrol = enrol_get_plugin('manual');
                 $enrol_instances = enrol_get_instances($course->id, true);
