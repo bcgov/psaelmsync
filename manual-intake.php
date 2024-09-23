@@ -27,13 +27,15 @@ $feedback = '';
 // Process form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['process'])) {
+        require_sesskey();
         // Processing a single record
         $record_date_created = required_param('record_date_created', PARAM_TEXT);
         $course_identifier = required_param('course_identifier', PARAM_TEXT);
         $course_state = required_param('course_state', PARAM_TEXT);
-        $guid = required_param('guid', PARAM_TEXT);
+        $elm_course_id = required_param('elm_course_id', PARAM_TEXT);
+        $user_guid = required_param('guid', PARAM_TEXT);
         $class_code = required_param('class_code', PARAM_TEXT);
-        $email = required_param('email', PARAM_TEXT);
+        $user_email = required_param('email', PARAM_TEXT);
         $first_name = required_param('first_name', PARAM_TEXT);
         $last_name = required_param('last_name', PARAM_TEXT);
 
@@ -43,17 +45,140 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Find the course by its idnumber (COURSE_IDENTIFIER maps to idnumber)
         $course = $DB->get_record('course', ['idnumber' => $course_identifier]);
         if ($course) {
-            // Find the user by email, create if they don't exist
-            $user = $DB->get_record('user', ['email' => $email]);
+
+            // Find the user by GUID, create if they don't exist
+            $user = $DB->get_record('user', ['idnumber' => $user_guid]);
             if (!$user) {
                 // Create the new user if they don't exist
-                $user = create_new_user($email, $first_name, $last_name, $guid);
+                $user = create_new_user($user_email, $first_name, $last_name, $user_guid);
                 if (!$user) {
-                    $feedback = "Failed to create a new user for email {$email}.";
+                    // We can't find them via GUID but is there an account with the same email?
+                    $useremailcheck = $DB->get_record('user', ['email' => $user_email]);
+                    if (!$useremailcheck) {
+                        // If there is no account with the email just put out a generic error.
+                        $feedback = "Failed to create a new user for GUID {$user_guid}.";
+                    } else {
+                        // If there is an account with the email
+                        $feedback = "Failed to create a new user for GUID {$user_guid}, ";
+                        $feedback .= "but there is <a href='/user/view.php?id={$useremailcheck->id}'>an account</a>";
+                        $feedback .= "with that {$user_email}. Please investigate further.";
+                    }
                 }
             }
 
             if ($user) {
+
+                // Even if we find a user by the provided GUID, we also need to check
+                // to see if the email address associated with the account is consistent.
+                $user_emailmismatch = 0; // for detecting and updating log action
+                if ($user->email != $user_email) {
+            
+                    // Check if another user already has the new email address
+                    $useremailcheck = $DB->get_record('user', ['email' => $user_email]);
+            
+                    // We base usernames on email addresses, but we want to be double-sure
+                    // and so also want to check to ensure that the username doesn't exist. 
+                    // These are almost certainly going to be the same, but weird things happen 
+                    // around here so we just make sure.
+                    // Generate the new username based on the new email address for comparison
+                    $new_username = strtolower($user_email);
+                    // If we need to optimize this process at any point, this lookup might 
+                    // be considered a bit redundant.
+                    $username_exists = $DB->record_exists('user', ['username' => $new_username]);
+            
+                    // We're going to send an email either way, but the message will vary.
+                    $message = 'We\'ve come across a learner with an account with the given GUID, but ';
+                    $message .= 'when we lookup the provided email address, it doesn\'t match and ';
+            
+                    if (!$useremailcheck && !$username_exists) {
+            
+                        // There isn't an existing account with this email or username.
+                        // Assume that the new email address if the correct one and 
+                        // update the account accordingly.
+                        // #TODO review this to see if it's the right thing to do.
+                        $user->email = $user_email;
+                        $user->username = $new_username;
+                        $user->timemodified = time();
+            
+                        // Validate the new email and username
+                        $user = validate_user_email($user);
+                        $user = validate_user_username($user);
+            
+                        // Update the user record in the database
+                        $DB->update_record('user', $user);
+            
+                        // Invalidate user cache/sessions if necessary
+                        \core\session\manager::invalidate_user_sessions($user->id);
+            
+                        // Trigger user updated event
+                        \core\event\user_updated::create_from_userid($user->id)->trigger();
+            
+                        $message .= 'there is no other account by that username/email address,';
+                        $message .= 'so we have updated the user\'s account accordingly.\n';
+                        $message .= 'CData name/GUID ' . $first_name . ' ' . $last_name . ': ' . $user_guid . '\n';
+                        $message .= 'Existing email: <' . $user->email . '>' . '\n';
+                        $message .= 'Email from CData record: <' . $user_email . '>';
+            
+                        // We're updating and moving on, but later on when we log this record, 
+                        // we'll want to indicate that this was record was "Updated and Enrolled"
+                        $user_emailmismatch = 1;
+                        // Send the email notification
+                        // NOTE: send_failure_notification is a misnomer here as we're not failing
+                        // but we want to send a notification anyhow and don't need another function
+                        // for it.
+                        send_failure_notification('emailmismatch', $first_name, $last_name, $user_email, $message);
+            
+                        // Do nothing else here and the script moves on...
+            
+                    } else { // BUT if there IS another account with this email or username
+                        
+                        // Should we do further checks here to see if the other account 
+                        // has ever been logged into? Is it enrolled in anything else?
+                        // If it's a blank account maybe make the decision to delete it
+                        // and update this one as we do if there's no account at all.
+                        // 
+                        if ($useremailcheck) {
+                            $message .= 'there is <a href="/user/view.php?id=' . $useremailcheck->id . '">';
+                            $message .= 'another account</a> with this email address.\n';
+                        }
+                        // As we base our usernames on email address, this lookup will almost
+                        // always return the exact same user. If the username exists AND it's 
+                        // not the same account then add addtional context.
+                        if ($username_exists && $useremailcheck->id != $username_exists->id) {
+                            $message .= 'As well, the username derived from the new email ';
+                            $message .= '<a href="/user/view.php?id=' . $username_exists->id . '">is already in use</a>.\n';
+                        }
+                        $message .= 'Please investigate further.';
+            
+                        // Given that there's a conflict here that needs to be resolved by
+                        // a human, we error out at this point, logging it and sending the notification.
+                        // Log the error
+                        $record_id = floor(microtime(true) * 1000); // make one up until we get a real field
+                        $enrolment_id = floor(microtime(true) * 1000); // ditto
+
+                        log_record($record_id,
+                                    $hash, 
+                                    $record_date_created, 
+                                    $course->id, 
+                                    $elm_course_id,
+                                    $class_code, 
+                                    $enrolment_id,
+                                    $user->id,
+                                    $first_name, 
+                                    $last_name, 
+                                    $user_email, 
+                                    $user_guid, 
+                                    'Email Mistatch',
+                                    'Error');
+                        
+                        // Send the email notification
+                        send_failure_notification('emailmismatch', $first_name, $last_name, $user_email, $message);
+            
+                        $e = 'Error';
+                        return $e;
+                    }
+                }
+
                 // Get the manual enrolment plugin
                 $manual_enrol = enrol_get_plugin('manual');
                 $enrol_instances = enrol_get_instances($course->id, true);
@@ -164,10 +289,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Build the API URL with date filters
         $from = required_param('from', PARAM_TEXT);
         $to = required_param('to', PARAM_TEXT);
-        $emaillookup = required_param('emaillookup', PARAM_TEXT);
-        if(!empty($emaillookup)) {
+        $user_emaillookup = required_param('emaillookup', PARAM_TEXT);
+        $user_guidlookup = required_param('guidlookup', PARAM_TEXT);
+        if(!empty($user_emaillookup)) {
             // $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to); // MOCK API format
-            $apiurlfiltered = $apiurl . "&%24filter=email+eq+%27" . urlencode($emaillookup) . "%27";
+            $apiurlfiltered = $apiurl . "&%24filter=email+eq+%27" . urlencode($user_emaillookup) . "%27";
+        } elseif(!empty($user_guidlookup)) {
+            $apiurlfiltered = $apiurl . "&%24filter=GUID+eq+%27" . urlencode($user_guidlookup) . "%27";
         } else {
             $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "%27+and+date_created+lt+%27" . urlencode($to) . '%27';
         }
@@ -223,21 +351,26 @@ function check_user_enrolment_status($courseidnumber, $userid) {
 }
 
 // Helper function to create a new user
-function create_new_user($email, $first_name, $last_name, $guid) {
+function create_new_user($user_email, $first_name, $last_name, $user_guid) {
     global $DB;
 
     $user = new stdClass();
-    $user->username = strtolower($email);
-    $user->email = $email;
-    $user->idnumber = $guid;
+    $user->username = strtolower($user_email);
+    $user->email = $user_email;
+    $user->idnumber = $user_guid;
     $user->firstname = $first_name;
     $user->lastname = $last_name;
-    $user->password = hash_internal_user_password(generate_password());
+    $user->password = hash_internal_user_password(random_string(8));
     $user->confirmed = 1; // Confirmed account
     $user->auth = 'manual'; // Manual authentication
+    $user->emailformat = 1; // 1 for HTML, 0 for plain text
+    $user->mnethostid = 1;
+    $user->timecreated = time();
+    $user->timemodified = time();
 
     // Insert the new user into the database
-    return $DB->insert_record('user', $user) ? $DB->get_record('user', ['email' => $email]) : false;
+    return $DB->insert_record('user', $user) ? $DB->get_record('user', ['email' => $user_email]) : false;
+
 }
 
 
@@ -276,7 +409,11 @@ function create_new_user($email, $first_name, $last_name, $guid) {
     </div>
     <div class="form-group col-2">
         <label for="emaillookup"><?php echo get_string('email_cdata_lookup', 'local_psaelmsync'); ?></label>
-        <input type="email" id="emaillookup" name="emaillookup" class="form-control" value="<?php echo s($emaillookup); ?>">
+        <input type="email" id="emaillookup" name="emaillookup" class="form-control" value="<?php echo s($user_emaillookup); ?>">
+    </div>
+    <div class="form-group col-2">
+        <label for="guidlookup"><?php echo get_string('guid_cdata_lookup', 'local_psaelmsync'); ?></label>
+        <input type="text" id="guidlookup" name="guidlookup" class="form-control" value="<?php echo s($user_guidlookup); ?>">
     </div>
     </div>
     <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
@@ -339,7 +476,7 @@ if (!empty($data)) {
 
             } else {
                 echo '<form method="post" action="' . $PAGE->url . '">';
-                echo '<input type="hidden" name="course_identifier" value="' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
+                echo '<input type="hidden" name="elm_course_id" value="' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
                 echo '<input type="hidden" name="record_date_created" value="' . htmlspecialchars($record['date_created']) . '">';
                 echo '<input type="hidden" name="course_state" value="' . htmlspecialchars($record['COURSE_STATE']) . '">';
                 echo '<input type="hidden" name="class_code" value="' . htmlspecialchars($record['COURSE_SHORTNAME']) . '">';
