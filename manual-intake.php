@@ -69,18 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Even if we find a user by the provided GUID, we also need to check
                 // to see if the email address associated with the account is consistent.
                 if($user->email != $email) {
-                    // OK the emails don't match. Is there another account with this addres?
-                    $useremailcheck = $DB->get_record('user', ['email' => $email]);
-                    if(!$useremailcheck) {
-                        // There isn't an existing account
-                        // Should we now attempt to update the user profile with the new email?
-                        // $feedback = "There's no account with that email {$email}.";
-                    } else {
-                        // There is another account with this email
-                        // The GUID is different
-                        // $feedback = "There's another account with this email address but a different GUID {$GUID}.";
-                    }
-
+                    // There's a whole section in lib.php that does this processing
+                    // that should be copied over here and tweaked accordingly.
                 }
 
 
@@ -195,9 +185,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $from = required_param('from', PARAM_TEXT);
         $to = required_param('to', PARAM_TEXT);
         $emaillookup = required_param('emaillookup', PARAM_TEXT);
+        $guidlookup = required_param('guidlookup', PARAM_TEXT);
         if(!empty($emaillookup)) {
             // $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to); // MOCK API format
             $apiurlfiltered = $apiurl . "&%24filter=email+eq+%27" . urlencode($emaillookup) . "%27";
+        } elseif(!empty($guidlookup)) {
+            $apiurlfiltered = $apiurl . "&%24filter=GUID+eq+%27" . urlencode($guidlookup) . "%27";
         } else {
             $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "%27+and+date_created+lt+%27" . urlencode($to) . '%27';
         }
@@ -262,12 +255,17 @@ function create_new_user($email, $first_name, $last_name, $guid) {
     $user->idnumber = $guid;
     $user->firstname = $first_name;
     $user->lastname = $last_name;
-    $user->password = hash_internal_user_password(generate_password());
+    $user->password = hash_internal_user_password(generate_password()); // hash_internal_user_password('Chang3m3Please!')
     $user->confirmed = 1; // Confirmed account
     $user->auth = 'manual'; // Manual authentication
+    $user->emailformat = 1; // 1 for HTML, 0 for plain text
+    $user->mnethostid = 1;
+    $user->timecreated = time();
+    $user->timemodified = time();
 
     // Insert the new user into the database
     return $DB->insert_record('user', $user) ? $DB->get_record('user', ['email' => $email]) : false;
+
 }
 
 
@@ -307,6 +305,10 @@ function create_new_user($email, $first_name, $last_name, $guid) {
     <div class="form-group col-2">
         <label for="emaillookup"><?php echo get_string('email_cdata_lookup', 'local_psaelmsync'); ?></label>
         <input type="email" id="emaillookup" name="emaillookup" class="form-control" value="<?php echo s($emaillookup); ?>">
+    </div>
+    <div class="form-group col-2">
+        <label for="guidlookup"><?php echo get_string('guid_cdata_lookup', 'local_psaelmsync'); ?></label>
+        <input type="text" id="guidlookup" name="guidlookup" class="form-control" value="<?php echo s($guidlookup); ?>">
     </div>
     </div>
     <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
