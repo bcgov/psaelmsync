@@ -36,6 +36,7 @@ function local_psaelmsync_sync() {
 
     if ($curl->get_errno()) {
         mtrace('PSA Enrol Sync: API request failed: ' . $apiurlfiltered);
+        // #TODO log these?
         return;
     }
 
@@ -43,6 +44,7 @@ function local_psaelmsync_sync() {
 
     if (empty($data)) {
         mtrace('PSA Enrol Sync: No data received from API: ' . print_r($response, true));
+        // #TODO log these?
         return;
     }
 
@@ -98,7 +100,6 @@ function local_psaelmsync_sync() {
     // on the ELM side.
     check_last_enrolment_or_suspend($notificationhours);
     
-
 }
 
 function process_enrolment_record($record) {
@@ -243,29 +244,33 @@ function process_enrolment_record($record) {
 
     // Even if we find a user by the provided GUID, we also need to check
     // to see if the email address associated with the account is consistent
-    // with the CData record.
-    $emailmismatch = 0;
+    // with this CData record.
+    $emailmismatch = 0; // for detecting and updating log action
     if ($user->email != $user_email) {
-
-        // Later on when we log this record, we'll want to indicate that this 
-        // record was not a pure "Success" ... somehow? action "Enrolled and Updated"?
-        $emailmismatch = 1;
-
-        // Generate the new username based on the new email address for comparison
-        $new_username = strtolower($user_email);
-
-        // Check if the new username already exists
-        $username_exists = $DB->record_exists('user', ['username' => $new_username]);
 
         // Check if another user already has the new email address
         $useremailcheck = $DB->get_record('user', ['email' => $user_email]);
 
+        // We base usernames on email addresses, but we want to be double-sure
+        // and so also want to check to ensure that the username doesn't exist. 
+        // These are almost certainly going to be the same, but weird things happen 
+        // around here so we just make sure.
+        // Generate the new username based on the new email address for comparison
+        $new_username = strtolower($user_email);
+        // If we need to optimize this process at any point, this lookup might 
+        // be considered a bit redundant.
+        $username_exists = $DB->record_exists('user', ['username' => $new_username]);
+
+        // We're going to send an email either way, but the message will vary.
         $message = 'We\'ve come across a learner with an account with the given GUID, but ';
         $message .= 'when we lookup the provided email address, it doesn\'t match and ';
 
         if (!$useremailcheck && !$username_exists) {
-            // There isn't an existing account with this email or username
-            // Update the user's email address and username
+
+            // There isn't an existing account with this email or username.
+            // Assume that the new email address if the correct one and 
+            // update the account accordingly.
+            // #TODO review this to see if it's the right thing to do.
             $user->email = $user_email;
             $user->username = $new_username;
             $user->timemodified = time();
@@ -283,22 +288,67 @@ function process_enrolment_record($record) {
             // Trigger user updated event
             \core\event\user_updated::create_from_userid($user->id)->trigger();
 
-            $message .= 'there is no existing account by that email address, so we have updated the user\'s email address and username accordingly.';
+            $message .= 'there is no other account by that username/email address,';
+            $message .= 'so we have updated the user\'s account accordingly.\n';
+            $message .= 'CData name/GUID ' . $user_first_name . ' ' . $user_last_name . ': ' . $user_guid . '\n';
+            $message .= 'Existing email: <' . $user->email . '>' . '\n';
+            $message .= 'Email from CData record: <' . $user_email . '>';
 
-        } else {
-            // There is another account with this email or username
-            // The GUID is different
+            // We're updating and moving on, but later on when we log this record, 
+            // we'll want to indicate that this was record was "Updated and Enrolled"
+            $emailmismatch = 1;
+            // Send the email notification
+            send_failure_notification('emailmismatch', $user_first_name, $user_last_name, $user_email, $message);
+
+            // Do nothing else here and the script moves on...
+
+        } else { // There IS another account with this email or username
+            
+            // Should we do further checks here to see if the other account 
+            // has ever been logged into? Is it enrolled in anything else?
+            // If it's a blank account maybe make the decision to delete it
+            // and update this one as we do if there's no account at all.
+            // 
             if ($useremailcheck) {
-                $message .= 'there is <a href="/user/view.php?id=' . $useremailcheck->id . '">another account</a> with this email address.';
+                $message .= 'there is <a href="/user/view.php?id=' . $useremailcheck->id . '">';
+                $message .= 'another account</a> with this email address.\n';
             }
+            // As we base our usernames on email address, this lookup will almost
+            // always return the exact same user. If the username exists AND it's 
+            // not the same account then add addtional context.
+            if ($username_exists && $useremailcheck->id != $username_exists->id) {
+                $message .= 'As well, the username derived from the new email ';
+                $message .= '<a href="/user/view.php?id=' . $username_exists->id . '">is already in use</a>.\n';
+            }
+            $message .= 'Please investigate further.';
 
-            if ($username_exists) {
-                $message .= ' Additionally, the username derived from the new email address is already in use.';
-            }
+            // Given that there's a conflict here that needs to be resolved by
+            // a human, we error out at this point logging it and sending the notification.
+            // Log the error
+            log_record($record_id, 
+                        $hash, 
+                        $record_date_created, 
+                        $course->id, 
+                        $elm_course_id, 
+                        $class_code, 
+                        $enrolment_id, 
+                        $user->id,
+                        $user_first_name, 
+                        $user_last_name, 
+                        $user_email, 
+                        $user_guid, 
+                        'Email Mistatch',
+                        'Error');
+            
+            // Send the email notification
+            send_failure_notification('emailmismatch', $user_first_name, $user_last_name, $user_email, $message);
+
+            $e = 'Error';
+            return $e;
+
         }
 
-        // Send the email notification
-        send_failure_notification('emailmismatch', $user_first_name, $user_last_name, $user_email, $message);
+        
     }
 
     if ($enrolment_status == 'Enrol') {
@@ -311,6 +361,15 @@ function process_enrolment_record($record) {
 
         send_welcome_email($user, $course);
 
+        $action = 'Enrol';
+        // #TODO If this is a record where there was an email mismatch and the 
+        // account was updated, we should perhaps not log it as a normal
+        // 'enrol'? NOTE that this has repercussions for counts we do for 
+        // enrol, drop, error, skip and to add a new type of action requires
+        // updating the DB with a corresponding field in _runs table.
+        // if($emailmismatch > 0) {
+        //     $action = 'Enrol Update Email';
+        // }
         log_record($record_id, 
                     $hash, 
                     $record_date_created, 
@@ -323,18 +382,20 @@ function process_enrolment_record($record) {
                     $user_last_name, 
                     $user_email, 
                     $user_guid, 
-                    'Enrol', 
+                    $action, 
                     'Success');
 
     } elseif ($enrolment_status == 'Suspend') {
         // Suspend the user in the course.
         suspend_user_in_course($user_id, $course->id, $elm_course_id);
 
-        // #TODO send a drop email?? ya!
-        // #TODO should we do a further lookup here and,
-        // if they're not enrolled in any other courses,
-        // go one step further and delete the whole account?
-
+        // #TODO send a drop email?? 
+        
+        $action = 'Suspend';
+        // See above comment in enrol about this.
+        // if($emailmismatch > 0) {
+        //     $action = 'Suspend Update Email';
+        // }
         log_record($record_id, 
                     $hash, 
                     $record_date_created, 
@@ -347,7 +408,7 @@ function process_enrolment_record($record) {
                     $user_last_name, 
                     $user_email, 
                     $user_guid, 
-                    'Suspend', 
+                    $action, 
                     'Success');
     }
     
