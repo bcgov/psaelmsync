@@ -425,7 +425,7 @@ if (!empty($data)) {
                 echo '<button type="submit" name="process" class="btn btn-primary">Process</button>';
                 echo '</form>';
             }
-
+            echo '</div>';
         }
         echo '</div>';
 
