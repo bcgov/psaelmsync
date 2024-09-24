@@ -39,6 +39,7 @@ $feedback = '';
 // Process form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['process'])) {
+        // For security
         require_sesskey();
         // Processing a single record
         $record_date_created = required_param('record_date_created', PARAM_TEXT);
@@ -113,6 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $user->timemodified = time();
                         // Update the user record in the database
                         user_update_user($user, true, false);
+                        // **Reload the user object from the database to get the updated email**
+                        $user = $DB->get_record('user', ['id' => $user->id]);
             
                         $message .= 'there is no other account by that username/email address,';
                         $message .= 'so we have updated the user\'s account accordingly.\n';
