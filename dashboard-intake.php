@@ -139,10 +139,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-
-<!-- Chart.js Chart -->
 <div class="row mb-2">
     <div class="col-md-12">
+
         <p>The cron job for intake (from CData) happens every 10 minutes, on the 5, 
             (ELM posts to CData every 10 minutes on the 0)
             between the hours of 06:00 and 18:00; 
@@ -150,6 +149,25 @@ document.addEventListener('DOMContentLoaded', function () {
         <p>At most, there will be 72 intake runs a day (6 an hour for 12 hours). 
             This page shows the past 100 runs, with each page representing about
             a day and a half worth of enrolment day.</p>
+
+        <?php
+        $sql = "SELECT 
+                    SUM(enrolcount) AS total_enrols, 
+                    SUM(suspendcount) AS total_suspends, 
+                    SUM(errorcount) AS total_errors
+                FROM {local_psaelmsync_runs}";
+
+        $totals = $DB->get_record_sql($sql);
+
+        if ($totals) {
+            echo "Total Enrols: " . $totals->total_enrols . " ";
+            echo "Total Suspends: " . $totals->total_suspends . " ";
+            echo "Total Errors: " . $totals->total_errors . " ";
+        } else {
+            echo "No data available.";
+        }
+        ?>
+
         <div style="height: 320px;">
             <canvas id="runsChart"></canvas>
         </div>
