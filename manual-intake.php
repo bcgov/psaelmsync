@@ -429,30 +429,13 @@ function create_new_user($user_email, $first_name, $last_name, $user_guid) {
 <?php
 if (!empty($data)) {
     if (isset($data['value']) && count($data['value']) > 0) {
-        // Display the results in a table
-        echo '<table class="table table-striped table-bordered">';
-        echo '<thead>';
-        echo '<tr>';
-        echo '<th>COURSE IDENTIFIER</th>';
-        echo '<th>COURSE STATE</th>';
-        echo '<th>GUID</th>';
-        echo '<th>COURSE SHORTNAME</th>';
-        echo '<th>DATE CREATED</th>';
-        echo '<th>EMAIL</th>';
-        echo '<th>FIRST NAME</th>';
-        echo '<th>LAST NAME</th>';
-        echo '<th>USER STATE (CData)</th>';
-        echo '<th>User Status (Moodle)</th>'; // New column for enrollment status
-        echo '<th>Enrollment Status</th>'; // New column for enrollment status
-        echo '<th>Process</th>'; // New column for process button
-        echo '</tr>';
-        echo '</thead>';
-        echo '<tbody>';
-
+        // Display the results in a table        
+        echo '<div class="row">';
         // Loop through the records and display them
         foreach ($data['value'] as $record) {
             // Find the user by email
-            $user = $DB->get_record('user', ['email' => $record['EMAIL']]);
+            $user = $DB->get_record('user', ['idnumber' => $record['GUID']]);
+            // $user = $DB->get_record('user', ['email' => $record['EMAIL']]);
             $enrol_status = 'Not Enrolled';
             $user_status = "Doesn't exist";
             if ($user) {
@@ -461,24 +444,41 @@ if (!empty($data)) {
                     $enrol_status = 'Enrolled';
                 }
                 $user_status = "User exists";
+                $elmcourseid = $record['COURSE_IDENTIFIER'];
+                // Get enrolment_id and another field (e.g., status) from local_psaelmsync_logs table.
+                $logs = $DB->get_record('local_psaelmsync_logs', 
+                                        [
+                                            'elm_course_id' => $elmcourseid, 
+                                            'user_id' => $user->id
+                                        ], 
+                                        'elm_enrolment_id, class_code, sha256hash');
+
             } 
+            echo '<div class="col-md-3 p-3">';
+            echo '<div>COURSE IDENTIFIER: ' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '</div>';
+            echo '<div>COURSE STATE: ' . htmlspecialchars($record['COURSE_STATE']) . '</td>';
+            echo '<div>GUID: ' . htmlspecialchars($record['GUID']) . '</div>';
+            echo '<div>COURSE SHORTNAME: ' . htmlspecialchars($record['COURSE_SHORTNAME']) . '</div>';
+            echo '<div>DATE CREATED: ' . htmlspecialchars($record['date_created']) . '</div>';
+            echo '<div>EMAIL: ' . htmlspecialchars($record['EMAIL']) . '</div>';
+            echo '<div>FIRST NAME: ' . htmlspecialchars($record['FIRST_NAME']) . '</div>';
+            echo '<div>LAST NAME: ' . htmlspecialchars($record['LAST_NAME']) . '</div>';
+            echo '<div>USER STATE (CData): ' . htmlspecialchars($record['USER_STATE']) . '</div>';
+            echo '<div>User Status (Moodle): ' . $user_status . '</div>'; // Show enrollment status
+            echo '<div>Enrollment Status: ' . $enrol_status . '</div>'; // Show enrollment status
 
-            echo '<tr>';
-            echo '<td>' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '</td>';
-            echo '<td>' . htmlspecialchars($record['COURSE_STATE']) . '</td>';
-            echo '<td>' . htmlspecialchars($record['GUID']) . '</td>';
-            echo '<td>' . htmlspecialchars($record['COURSE_SHORTNAME']) . '</td>';
-            echo '<td>' . htmlspecialchars($record['date_created']) . '</td>';
-            echo '<td>' . htmlspecialchars($record['EMAIL']) . '</td>';
-            echo '<td>' . htmlspecialchars($record['FIRST_NAME']) . '</td>';
-            echo '<td>' . htmlspecialchars($record['LAST_NAME']) . '</td>';
-            echo '<td>' . htmlspecialchars($record['USER_STATE']) . '</td>';
-            echo '<td>' . $user_status . '</td>'; // Show enrollment status
-            echo '<td>' . $enrol_status . '</td>'; // Show enrollment status
+            if(!empty($logs)) {
+                echo '<h4>Existing logs</h4>';
+                foreach($logs as $l) {
+                    echo '<div class="p-2 mb-1 bg-light-subtle rounded-lg">' . $l['timestamp'] . ' - ' . $l['action'] . ' - ' . $l['user_guid'] . '</div>';
+                }
+            }
+
             // Add a process button for each record
-            echo '<td>';
+            echo '<div>';
+            // The following is kinda ridiculous. Rethink.
             if($record['COURSE_STATE'] == 'Enrol' && $enrol_status == 'Enrolled' || $record['COURSE_STATE'] == 'Suspend' && $enrol_status == 'Not Enrolled') {
-
+                // 
             } else {
                 echo '<form method="post" action="' . $PAGE->url . '">';
                 echo '<input type="hidden" name="elm_course_id" value="' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
@@ -493,12 +493,9 @@ if (!empty($data)) {
                 echo '<button type="submit" name="process" class="btn btn-primary">Process</button>';
                 echo '</form>';
             }
-            echo '</td>';
-            echo '</tr>';
+            echo '</div>';
         }
-
-        echo '</tbody>';
-        echo '</table>';
+        echo '</div>';
     } else {
         echo '<div class="alert alert-warning">No data found for the selected dates.</div>';
     }
