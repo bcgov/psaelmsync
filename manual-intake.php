@@ -364,7 +364,7 @@ if (!empty($data)) {
         foreach ($data['value'] as $record) {
             $coursefullname = 'Cannot find course.';
             $moodlecourseid = 0;
-            $courseidnum = $record['COURSE_IDENTIFIER'];
+            $courseidnum = (int) $record['COURSE_IDENTIFIER'];
             if ($course = $DB->get_record('course', array('idnumber' => $courseidnum), 'fullname')) {
                 $coursefullname = $course->fullname;
                 $moodlecourseid = $course->id;
@@ -403,7 +403,7 @@ if (!empty($data)) {
             echo '<div>COURSE SHORTNAME: ' . htmlspecialchars($record['COURSE_SHORTNAME']) . '</div>';
             echo '<div title="The datetime they clicked Enrol in ELM">COURSE_STATE_DATE: ' . htmlspecialchars($record['COURSE_STATE_DATE']) . '</div>';
             echo '<div>User Status (Moodle): <a href="/user/view.php?id=' . $user->id . '">' . $user_status . '</a></div>'; // Show enrollment status
-            echo '<div>Enrollment Status (Moodle): <a href="/user/index.php?id=' . $moodlecourseid . '">' . $enrol_status . '</div>'; // Show enrollment status
+            echo '<div>Enrollment Status (Moodle): <a href="/user/index.php?id=' . $moodlecourseid . '">' . $enrol_status . '</a></div>'; // Show enrollment status
             echo '<div>FIRST NAME: ' . htmlspecialchars($record['FIRST_NAME']) . '</div>';
             echo '<div>LAST NAME: ' . htmlspecialchars($record['LAST_NAME']) . '</div>';
             echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . ' (moodle) ' . $user->email . '</div>';
