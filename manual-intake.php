@@ -404,6 +404,8 @@ if (!empty($data)) {
                 foreach($logs as $l) {
                     echo '<div class="p-2 m-1 bg-white rounded-lg">' . $l->timestamp . ' - ' . $l->action . ' - ' . $l->user_guid . '</div>';
                 }
+            } else {
+                echo '<div>No matching records found.</div>';
             }
 
             // The following is kinda ridiculous. Rethink.
