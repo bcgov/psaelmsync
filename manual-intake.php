@@ -362,6 +362,13 @@ if (!empty($data)) {
         echo '<div class="row">';
         // Loop through the records and display them
         foreach ($data['value'] as $record) {
+            $coursefullname = 'Cannot find course.';
+            $moodlecourseid = 0;
+            $courseidnum = $record['COURSE_IDENTIFIER'];
+            if ($course = $DB->get_record('course', array('idnumber' => $courseidnum), 'fullname')) {
+                $coursefullname = $course->fullname;
+                $moodlecourseid = $course->id;
+            }
 
             echo '<div class="col-md-3 m-2 p-3 bg-light rounded-lg">';
             // Find the user by email
@@ -387,22 +394,30 @@ if (!empty($data)) {
 
             } 
             
-            echo '<div>COURSE IDENTIFIER: ' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '</div>';
-            echo '<div>COURSE STATE: ' . htmlspecialchars($record['COURSE_STATE']) . '</div>';
-            echo '<div>GUID: ' . htmlspecialchars($record['GUID']) . '</div>';
-            echo '<div>COURSE SHORTNAME: ' . htmlspecialchars($record['COURSE_SHORTNAME']) . '</div>';
             echo '<div>DATE CREATED: ' . htmlspecialchars($record['date_created']) . '</div>';
-            echo '<div>EMAIL: ' . htmlspecialchars($record['EMAIL']) . '</div>';
+            echo '<div>COURSE STATE: <strong>' . htmlspecialchars($record['COURSE_STATE']) . '</strong></div>';
+            echo '<div>COURSE IDENTIFIER: ';
+            echo '<a href="/course/view.php?idnumber=' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
+            echo htmlspecialchars($record['COURSE_IDENTIFIER']);
+            echo '</a> - ' . $coursefullname . '</div>';
+            echo '<div>COURSE SHORTNAME: ' . htmlspecialchars($record['COURSE_SHORTNAME']) . '</div>';
+            echo '<div title="The datetime they clicked Enrol in ELM">COURSE_STATE_DATE: ' . htmlspecialchars($record['COURSE_STATE_DATE']) . '</div>';
+            echo '<div>User Status (Moodle): <a href="/user/view.php?id=' . $user->id . '">' . $user_status . '</a></div>'; // Show enrollment status
+            echo '<div>Enrollment Status (Moodle): <a href="/user/index.php?id=' . $moodlecourseid . '">' . $enrol_status . '</div>'; // Show enrollment status
             echo '<div>FIRST NAME: ' . htmlspecialchars($record['FIRST_NAME']) . '</div>';
             echo '<div>LAST NAME: ' . htmlspecialchars($record['LAST_NAME']) . '</div>';
-            echo '<div>USER STATE (CData): ' . htmlspecialchars($record['USER_STATE']) . '</div>';
-            echo '<div>User Status (Moodle): ' . $user_status . '</div>'; // Show enrollment status
-            echo '<div>Enrollment Status: ' . $enrol_status . '</div>'; // Show enrollment status
+            echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . ' (moodle) ' . $user->email . '</div>';
+            echo '<div>GUID: (cdata) ' . htmlspecialchars($record['GUID']) . '</div>';
+            echo '<div>USER STATE (cdata): ' . htmlspecialchars($record['USER_STATE']) . '</div>';
             
             if(!empty($logs)) {
-                echo '<h4>Existing logs</h4>';
+                echo '<h4>Existing logs for this course</h4>';
                 foreach($logs as $l) {
-                    echo '<div class="p-2 m-1 bg-white rounded-lg">' . $l->timestamp . ' - ' . $l->action . ' - ' . $l->user_guid . '</div>';
+                    $iso8601 = date('Y-m-d H:i:s', (int) $l->timestamp);
+                    echo '<div class="p-2 m-1 bg-white rounded-lg">';
+                    echo '<a target="_blank" href="/local/psaelmsync/dashboard.php?search='. urlencode($iso8601) . '">';
+                    echo $iso8601 . ' - ' . $l->action . ' - ' . $l->user_email . ' - ' . $l->user_guid;
+                    echo '</a></div>';
                 }
             } else {
                 echo '<div>No matching records found.</div>';
