@@ -375,17 +375,18 @@ if (!empty($data)) {
                 $user_status = "User exists";
                 $elmcourseid = $record['COURSE_IDENTIFIER'];
                 // Get enrolment_id and another field (e.g., status) from local_psaelmsync_logs table.
-                $logs = $DB->get_record('local_psaelmsync_logs', 
-                                        [
-                                            'elm_course_id' => $elmcourseid, 
-                                            'user_id' => $user->id
-                                        ], 
-                                        'elm_enrolment_id, class_code, sha256hash');
+                $logs = $DB->get_records('local_psaelmsync_logs', 
+                                            [
+                                                'elm_course_id' => $elmcourseid, 
+                                                'user_id' => $user->id
+                                            ], 
+                                            '', 
+                                            'timestamp, action, user_guid');
 
             } 
             echo '<div class="col-md-3 p-3">';
             echo '<div>COURSE IDENTIFIER: ' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '</div>';
-            echo '<div>COURSE STATE: ' . htmlspecialchars($record['COURSE_STATE']) . '</td>';
+            echo '<div>COURSE STATE: ' . htmlspecialchars($record['COURSE_STATE']) . '</div>';
             echo '<div>GUID: ' . htmlspecialchars($record['GUID']) . '</div>';
             echo '<div>COURSE SHORTNAME: ' . htmlspecialchars($record['COURSE_SHORTNAME']) . '</div>';
             echo '<div>DATE CREATED: ' . htmlspecialchars($record['date_created']) . '</div>';
@@ -395,11 +396,11 @@ if (!empty($data)) {
             echo '<div>USER STATE (CData): ' . htmlspecialchars($record['USER_STATE']) . '</div>';
             echo '<div>User Status (Moodle): ' . $user_status . '</div>'; // Show enrollment status
             echo '<div>Enrollment Status: ' . $enrol_status . '</div>'; // Show enrollment status
-
+            
             if(!empty($logs)) {
                 echo '<h4>Existing logs</h4>';
                 foreach($logs as $l) {
-                    echo '<div class="p-2 mb-1 bg-light-subtle rounded-lg">' . $l['timestamp'] . ' - ' . $l['action'] . ' - ' . $l['user_guid'] . '</div>';
+                    echo '<div class="p-2 mb-1 bg-light-subtle rounded-lg">' . $l->timestamp . ' - ' . $l->action . ' - ' . $l->user_guid . '</div>';
                 }
             }
 
