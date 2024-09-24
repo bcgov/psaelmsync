@@ -244,15 +244,14 @@ function process_enrolment_record($record) {
 
     // Even if we find a user by the provided GUID, we also need to check
     // to see if the email address associated with the account is consistent
-    // with this CData record.
-    $emailmismatch = 0; // for detecting and updating log action
+    // with this CData record. If it isn't then we notify admins and error out.
     if ($user->email != $user_email) {
 
         // Check if another user already has the new email address
         $useremailcheck = $DB->get_record('user', ['email' => $user_email]);
 
-        // We base usernames on email addresses, but we want to be double-sure
-        // and so also want to check to ensure that the username doesn't exist. 
+        // We base usernames on email addresses, so we want to be double-sure
+        // and also check to ensure that the username doesn't exist. 
         // These are almost certainly going to be the same, but weird things happen 
         // around here so we just make sure.
         // Generate the new username based on the new email address for comparison
@@ -267,74 +266,55 @@ function process_enrolment_record($record) {
 
         if (!$useremailcheck && !$username_exists) {
 
-            // There isn't an existing account with this email or username.
-            // Assume that the new email address if the correct one and 
-            // update the account accordingly.
-            // #TODO review this to see if it's the right thing to do.
-            $user->email = validate_email($user_email) ? $user_email : null;
-            $user->username = core_user::clean_field($new_username, 'username');
-            $user->timemodified = time();
-            // Update the user record in the database
-            user_update_user($user, true, false);
-
-            $message .= 'there is no other account by that username/email address, ';
-            $message .= 'so we have updated the user\'s account accordingly.\n';
-            $message .= 'CData name/GUID ' . $first_name . ' ' . $last_name . ': ' . $user_guid . '\n';
-            $message .= 'Existing email: <' . $user->email . '>' . '\n';
-            $message .= 'Email from CData record: <' . $user_email . '>';
-
-            // We're updating and moving on, but later on when we log this record, 
-            // we'll want to indicate that this was record was "Updated and Enrolled"
-            $emailmismatch = 1;
-            // Send the email notification
-            send_failure_notification('emailmismatch', $first_name, $last_name, $user_email, $message);
-
-            // Do nothing else here and the script moves on...
+            $message .= 'there is no other account by that username/email address.<br>';
 
         } else { // There IS another account with this email or username
             
             // Should we do further checks here to see if the other account 
             // has ever been logged into? Is it enrolled in anything else?
-            // If it's a blank account maybe make the decision to delete it
-            // and update this one as we do if there's no account at all.
+            // If it's a blank account maybe make the decision to delete it.
             // 
             if ($useremailcheck) {
                 $message .= 'there is <a href="/user/view.php?id=' . $useremailcheck->id . '">';
-                $message .= 'another account</a> with this email address.\n';
+                $message .= 'another account</a> with this email address.<br>';
             }
             // As we base our usernames on email address, this lookup will almost
             // always return the exact same user. If the username exists AND it's 
             // not the same account then add addtional context.
             if ($username_exists && $useremailcheck->id != $username_exists->id) {
                 $message .= 'As well, the username derived from the new email ';
-                $message .= '<a href="/user/view.php?id=' . $username_exists->id . '">is already in use</a>.\n';
+                $message .= '<a href="/user/view.php?id=' . $username_exists->id . '">is already in use</a>.<br>';
             }
-            $message .= 'Please investigate further.';
-
-            // Given that there's a conflict here that needs to be resolved by
-            // a human, we error out at this point logging it and sending the notification.
-            // Log the error
-            log_record($record_id, 
-                        $hash, 
-                        $record_date_created, 
-                        $course->id, 
-                        $elm_course_id, 
-                        $class_code, 
-                        $enrolment_id, 
-                        $user->id,
-                        $first_name, 
-                        $last_name, 
-                        $user_email, 
-                        $user_guid, 
-                        'Email Mistatch',
-                        'Error');
-            
-            // Send the email notification
-            send_failure_notification('emailmismatch', $first_name, $last_name, $user_email, $message);
-
-            $e = 'Error';
-            return $e;
         }
+        $message .= '<hr>';
+        $message .= 'CData name/GUID ' . $first_name . ' ' . $last_name . ': ' . $user_guid . '<br>';
+        $message .= 'Existing email: <' . $user->email . '>' . '<br>';
+        $message .= 'Email from CData record: <' . $user_email . '><br><br>';
+        $message .= 'Please investigate further.';
+
+        // Given that there's a conflict here that needs to be resolved by
+        // a human, we error out at this point logging it and sending the notification.
+        // Log the error
+        log_record($record_id, 
+                    $hash, 
+                    $record_date_created, 
+                    $course->id, 
+                    $elm_course_id, 
+                    $class_code, 
+                    $enrolment_id, 
+                    $user->id,
+                    $first_name, 
+                    $last_name, 
+                    $user_email, 
+                    $user_guid, 
+                    'Email Mistatch',
+                    'Error');
+        
+        // Send the email notification
+        send_failure_notification('emailmismatch', $first_name, $last_name, $user_email, $message);
+
+        $e = 'Error';
+        return $e;
     }
 
     if ($enrolment_status == 'Enrol') {
