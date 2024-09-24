@@ -362,6 +362,8 @@ if (!empty($data)) {
         echo '<div class="row">';
         // Loop through the records and display them
         foreach ($data['value'] as $record) {
+            
+            echo '<div class="col-md-3 p-3">';
             // Find the user by email
             $user = $DB->get_record('user', ['idnumber' => $record['GUID']]);
             // $user = $DB->get_record('user', ['email' => $record['EMAIL']]);
@@ -384,7 +386,7 @@ if (!empty($data)) {
                                             'timestamp, action, user_guid');
 
             } 
-            echo '<div class="col-md-3 p-3">';
+            
             echo '<div>COURSE IDENTIFIER: ' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '</div>';
             echo '<div>COURSE STATE: ' . htmlspecialchars($record['COURSE_STATE']) . '</div>';
             echo '<div>GUID: ' . htmlspecialchars($record['GUID']) . '</div>';
@@ -404,8 +406,6 @@ if (!empty($data)) {
                 }
             }
 
-            // Add a process button for each record
-            echo '<div>';
             // The following is kinda ridiculous. Rethink.
             if($record['COURSE_STATE'] == 'Enrol' && $enrol_status == 'Enrolled' || $record['COURSE_STATE'] == 'Suspend' && $enrol_status == 'Not Enrolled') {
                 // 
@@ -423,9 +423,10 @@ if (!empty($data)) {
                 echo '<button type="submit" name="process" class="btn btn-primary">Process</button>';
                 echo '</form>';
             }
-            echo '</div>';
+
         }
         echo '</div>';
+
     } else {
         echo '<div class="alert alert-warning">No data found for the selected dates.</div>';
     }
