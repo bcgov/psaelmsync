@@ -334,10 +334,7 @@ function process_enrolment_record($record) {
 
             $e = 'Error';
             return $e;
-
         }
-
-        
     }
 
     if ($enrolment_status == 'Enrol') {
