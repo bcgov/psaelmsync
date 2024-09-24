@@ -1,6 +1,9 @@
 <?php
-require_once('../../config.php');
+
+require_once($CFG->dirroot . '/config.php');
+require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/local/psaelmsync/lib.php'); // Include lib.php
+
 require_login();
 
 global $DB, $PAGE, $OUTPUT;
@@ -30,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         require_sesskey();
         // Processing a single record
         $record_date_created = required_param('record_date_created', PARAM_TEXT);
-        $course_identifier = required_param('course_identifier', PARAM_TEXT);
         $course_state = required_param('course_state', PARAM_TEXT);
         $elm_course_id = required_param('elm_course_id', PARAM_TEXT);
         $user_guid = required_param('guid', PARAM_TEXT);
@@ -39,11 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $first_name = required_param('first_name', PARAM_TEXT);
         $last_name = required_param('last_name', PARAM_TEXT);
 
-        $hash_content = $record_date_created . $course_identifier . $class_code . $course_state . $user_guid . $user_email;
+        $hash_content = $record_date_created . $elm_course_id . $class_code . $course_state . $user_guid . $user_email;
         $hash = hash('sha256', $hash_content);
         
         // Find the course by its idnumber (COURSE_IDENTIFIER maps to idnumber)
-        $course = $DB->get_record('course', ['idnumber' => $course_identifier]);
+        $course = $DB->get_record('course', ['idnumber' => $elm_course_id]);
         if ($course) {
 
             // Find the user by GUID, create if they don't exist
@@ -51,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$user) {
                 // Create the new user if they don't exist
                 $user = create_new_user($user_email, $first_name, $last_name, $user_guid);
+                
                 if (!$user) {
                     // We can't find them via GUID but is there an account with the same email?
                     $useremailcheck = $DB->get_record('user', ['email' => $user_email]);
@@ -96,22 +99,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Assume that the new email address if the correct one and 
                         // update the account accordingly.
                         // #TODO review this to see if it's the right thing to do.
-                        $user->email = $user_email;
-                        $user->username = $new_username;
+                        $user->email = validate_email($user_email) ? $user_email : null;
+                        $user->username = core_user::clean_field($new_username, 'username');
                         $user->timemodified = time();
-            
-                        // Validate the new email and username
-                        $user = validate_user_email($user);
-                        $user = validate_user_username($user);
-            
                         // Update the user record in the database
-                        $DB->update_record('user', $user);
-            
-                        // Invalidate user cache/sessions if necessary
-                        \core\session\manager::invalidate_user_sessions($user->id);
-            
-                        // Trigger user updated event
-                        \core\event\user_updated::create_from_userid($user->id)->trigger();
+                        user_update_user($user, true, false);
             
                         $message .= 'there is no other account by that username/email address,';
                         $message .= 'so we have updated the user\'s account accordingly.\n';
@@ -215,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $log->sha256hash = $hash;
                             $log->record_date_created = $record_date_created;
                             $log->course_id = $course->id;
-                            $log->elm_course_id = $course_identifier;
+                            $log->elm_course_id = $elm_course_id;
                             $log->class_code = $class_code;
                             $log->course_name = $course->fullname;
                             $log->user_id = $user->id;
@@ -254,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $log->sha256hash = $hash;
                         $log->record_date_created = $record_date_created;
                         $log->course_id = $course->id;
-                        $log->elm_course_id = $course_identifier;
+                        $log->elm_course_id = $elm_course_id;
                         $log->class_code = $class_code;
                         $log->course_name = $course->fullname;
                         $log->user_id = $user->id;
@@ -281,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         } else {
-            $feedback = "Course with identifier {$course_identifier} not found.";
+            $feedback = "Course with identifier {$elm_course_id} not found.";
         }
     } else {
         // Handle the date range form submission (API query)
@@ -368,8 +360,9 @@ function create_new_user($user_email, $first_name, $last_name, $user_guid) {
     $user->timecreated = time();
     $user->timemodified = time();
 
-    // Insert the new user into the database
-    return $DB->insert_record('user', $user) ? $DB->get_record('user', ['email' => $user_email]) : false;
+    $user->id = user_create_user($user, true, false);
+
+    return $user;
 
 }
 
