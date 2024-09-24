@@ -136,8 +136,8 @@ function process_enrolment_record($record) {
     $elm_course_id = (int) $record['COURSE_IDENTIFIER'];
     $enrolment_status = $record['COURSE_STATE'];
     $class_code = $record['COURSE_SHORTNAME'];
-    $user_first_name = $record['FIRST_NAME'];
-    $user_last_name = $record['LAST_NAME'];
+    $first_name = $record['FIRST_NAME'];
+    $last_name = $record['LAST_NAME'];
     $user_email = $record['EMAIL'];
     $user_guid = $record['GUID'];
     
@@ -178,14 +178,14 @@ function process_enrolment_record($record) {
                     $class_code, 
                     $enrolment_id, 
                     $user_id, 
-                    $user_first_name, 
-                    $user_last_name, 
+                    $first_name, 
+                    $last_name, 
                     $user_email, 
                     $user_guid, 
                     'Course not found',
                     'Error');
         
-        send_failure_notification('coursefail', $user_first_name, $user_last_name, $user_email, $elm_course_id);
+        send_failure_notification('coursefail', $first_name, $last_name, $user_email, $elm_course_id);
         $e = 'Error';
         return $e;
     }
@@ -199,7 +199,7 @@ function process_enrolment_record($record) {
         // Attempt to create a new user, handle any exceptions gracefully.
         try {
 
-            $user = create_user($user_first_name, $user_last_name, $user_email, $user_guid);
+            $user = create_user($first_name, $last_name, $user_email, $user_guid);
             $user_id = $user->id;
 
         } catch (Exception $e) {
@@ -226,15 +226,15 @@ function process_enrolment_record($record) {
                         $class_code, 
                         $enrolment_id, 
                         0, // No user ID since creation failed
-                        $user_first_name, 
-                        $user_last_name, 
+                        $first_name, 
+                        $last_name, 
                         $user_email, 
                         $user_guid, 
                         'User create failure',
                         'Error');
             
             // Send an email notification
-            send_failure_notification('userfail', $user_first_name, $user_last_name, $user_email, $error_message);
+            send_failure_notification('userfail', $first_name, $last_name, $user_email, $error_message);
 
             // Return to skip further processing of this record.
             $e = 'Error';
@@ -271,26 +271,15 @@ function process_enrolment_record($record) {
             // Assume that the new email address if the correct one and 
             // update the account accordingly.
             // #TODO review this to see if it's the right thing to do.
-            $user->email = $user_email;
-            $user->username = $new_username;
+            $user->email = validate_email($user_email) ? $user_email : null;
+            $user->username = core_user::clean_field($new_username, 'username');
             $user->timemodified = time();
-
-            // Validate the new email and username
-            $user = validate_user_email($user);
-            $user = validate_user_username($user);
-
             // Update the user record in the database
-            $DB->update_record('user', $user);
+            user_update_user($user, true, false);
 
-            // Invalidate user cache/sessions if necessary
-            \core\session\manager::invalidate_user_sessions($user->id);
-
-            // Trigger user updated event
-            \core\event\user_updated::create_from_userid($user->id)->trigger();
-
-            $message .= 'there is no other account by that username/email address,';
+            $message .= 'there is no other account by that username/email address, ';
             $message .= 'so we have updated the user\'s account accordingly.\n';
-            $message .= 'CData name/GUID ' . $user_first_name . ' ' . $user_last_name . ': ' . $user_guid . '\n';
+            $message .= 'CData name/GUID ' . $first_name . ' ' . $last_name . ': ' . $user_guid . '\n';
             $message .= 'Existing email: <' . $user->email . '>' . '\n';
             $message .= 'Email from CData record: <' . $user_email . '>';
 
@@ -298,7 +287,7 @@ function process_enrolment_record($record) {
             // we'll want to indicate that this was record was "Updated and Enrolled"
             $emailmismatch = 1;
             // Send the email notification
-            send_failure_notification('emailmismatch', $user_first_name, $user_last_name, $user_email, $message);
+            send_failure_notification('emailmismatch', $first_name, $last_name, $user_email, $message);
 
             // Do nothing else here and the script moves on...
 
@@ -333,15 +322,15 @@ function process_enrolment_record($record) {
                         $class_code, 
                         $enrolment_id, 
                         $user->id,
-                        $user_first_name, 
-                        $user_last_name, 
+                        $first_name, 
+                        $last_name, 
                         $user_email, 
                         $user_guid, 
                         'Email Mistatch',
                         'Error');
             
             // Send the email notification
-            send_failure_notification('emailmismatch', $user_first_name, $user_last_name, $user_email, $message);
+            send_failure_notification('emailmismatch', $first_name, $last_name, $user_email, $message);
 
             $e = 'Error';
             return $e;
@@ -378,8 +367,8 @@ function process_enrolment_record($record) {
                     $class_code, 
                     $enrolment_id, 
                     $user_id, 
-                    $user_first_name, 
-                    $user_last_name, 
+                    $first_name, 
+                    $last_name, 
                     $user_email, 
                     $user_guid, 
                     $action, 
@@ -404,8 +393,8 @@ function process_enrolment_record($record) {
                     $class_code, 
                     $enrolment_id, 
                     $user_id, 
-                    $user_first_name, 
-                    $user_last_name, 
+                    $first_name, 
+                    $last_name, 
                     $user_email, 
                     $user_guid, 
                     $action, 
@@ -487,7 +476,7 @@ function send_welcome_email($user, $course) {
     email_to_user($user, core_user::get_support_user(), $subject, $plaintext_message, $html_message);
 }
 
-function log_record($record_id, $hash, $record_date_created, $course_id, $elm_course_id, $class_code, $enrolment_id, $user_id, $user_first_name, $user_last_name, $user_email, $user_guid, $action, $status) {
+function log_record($record_id, $hash, $record_date_created, $course_id, $elm_course_id, $class_code, $enrolment_id, $user_id, $first_name, $last_name, $user_email, $user_guid, $action, $status) {
     global $DB;
 
     // Ensure course_id is valid before lookup
@@ -507,8 +496,8 @@ function log_record($record_id, $hash, $record_date_created, $course_id, $elm_co
     $log->class_code = $class_code;
     $log->course_name = $coursefullname;
     $log->user_id = $user_id;
-    $log->user_firstname = $user_first_name;
-    $log->user_lastname = $user_last_name;
+    $log->user_firstname = $first_name;
+    $log->user_lastname = $last_name;
     $log->user_guid = $user_guid; 
     $log->user_email = $user_email;
     $log->elm_enrolment_id = $enrolment_id;
