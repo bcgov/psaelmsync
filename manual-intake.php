@@ -1,12 +1,21 @@
 <?php
+/**
+ * Manual intake. 
+ * 
+ * Read the CData feed directly and echo it back; do lookups on each record
+ * and provide options to action them.
+ * 
+ * Author: Allan Haggett <allan.haggett@gov.bc.ca>
+ * 
+ */
+
+global $CFG, $DB, $PAGE, $OUTPUT;
 
 require_once($CFG->dirroot . '/config.php');
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/local/psaelmsync/lib.php'); // Include lib.php
 
 require_login();
-
-global $DB, $PAGE, $OUTPUT;
 
 $context = context_system::instance();
 require_capability('local/psaelmsync:viewlogs', $context);
