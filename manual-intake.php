@@ -362,8 +362,8 @@ if (!empty($data)) {
         echo '<div class="row">';
         // Loop through the records and display them
         foreach ($data['value'] as $record) {
-            
-            echo '<div class="col-md-3 p-3">';
+
+            echo '<div class="col-md-3 m-2 p-3 bg-light rounded-lg">';
             // Find the user by email
             $user = $DB->get_record('user', ['idnumber' => $record['GUID']]);
             // $user = $DB->get_record('user', ['email' => $record['EMAIL']]);
@@ -402,7 +402,7 @@ if (!empty($data)) {
             if(!empty($logs)) {
                 echo '<h4>Existing logs</h4>';
                 foreach($logs as $l) {
-                    echo '<div class="p-2 mb-1 bg-light-subtle rounded-lg">' . $l->timestamp . ' - ' . $l->action . ' - ' . $l->user_guid . '</div>';
+                    echo '<div class="p-2 m-1 bg-white rounded-lg">' . $l->timestamp . ' - ' . $l->action . ' - ' . $l->user_guid . '</div>';
                 }
             }
 
