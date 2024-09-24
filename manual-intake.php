@@ -11,7 +11,7 @@
 
 global $CFG, $DB, $PAGE, $OUTPUT;
 
-require_once($CFG->dirroot . '/config.php');
+require_once('../../config.php');
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/local/psaelmsync/lib.php'); // Include lib.php
 
