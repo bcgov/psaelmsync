@@ -358,11 +358,11 @@ function create_new_user($user_email, $first_name, $last_name, $user_guid) {
 <?php
 if (!empty($data)) {
     if (isset($data['value']) && count($data['value']) > 0) {
-        $logs = [];
         // Display the results in a table        
         echo '<div class="row">';
         // Loop through the records and display them
         foreach ($data['value'] as $record) {
+            $logs = [];
             $coursefullname = 'Cannot find course.';
             $moodlecourseid = 0;
             $courseidnum = (int) $record['COURSE_IDENTIFIER'];
@@ -414,7 +414,10 @@ if (!empty($data)) {
             if($record['EMAIL'] != $user->email) {
                 echo '<div><strong>Email mismatch!</strong></div>';
             }
-            echo '<div>GUID: (cdata) ' . htmlspecialchars($record['GUID']) . '</div>';
+            echo '<div>GUID: (cdata) ';
+            echo '<a href="/local/psaelmsync/dashboard.php?search=' . htmlspecialchars($record['GUID']) . '">';
+            echo htmlspecialchars($record['GUID']);
+            echo '</a></div>';
             echo '<div>GUID: (moodle) ' . $user->idnumber . '</div>';
             if($record['GUID'] != $user->idnumber) {
                 echo '<div><strong>GUID mismatch!</strong></div>';
@@ -426,7 +429,7 @@ if (!empty($data)) {
                 foreach($logs as $l) {
                     $iso8601 = date('Y-m-d H:i:s', (int) $l->timestamp);
                     echo '<div class="p-2 m-1 bg-white rounded-lg">';
-                    echo '<a target="_blank" href="/local/psaelmsync/dashboard.php?search='. urlencode($iso8601) . '">';
+                    echo '<a href="/local/psaelmsync/dashboard.php?search='. urlencode($iso8601) . '">';
                     echo $iso8601 . ' - ' . $l->action . ' - ' . $l->user_email . ' - ' . $l->user_guid;
                     echo '</a></div>';
                 }
