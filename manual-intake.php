@@ -358,6 +358,7 @@ function create_new_user($user_email, $first_name, $last_name, $user_guid) {
 <?php
 if (!empty($data)) {
     if (isset($data['value']) && count($data['value']) > 0) {
+        $logs = [];
         // Display the results in a table        
         echo '<div class="row">';
         // Loop through the records and display them
@@ -396,6 +397,9 @@ if (!empty($data)) {
             
             echo '<div>DATE CREATED: ' . htmlspecialchars($record['date_created']) . '</div>';
             echo '<div>COURSE STATE: <strong>' . htmlspecialchars($record['COURSE_STATE']) . '</strong></div>';
+
+            echo '<div>Enrollment Status (Moodle): <a href="/user/index.php?id=' . $moodlecourseid . '">' . $enrol_status . '</a></div>'; // Show enrollment status
+
             echo '<div>COURSE IDENTIFIER: ';
             echo '<a href="/course/view.php?idnumber=' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
             echo htmlspecialchars($record['COURSE_IDENTIFIER']);
@@ -403,11 +407,11 @@ if (!empty($data)) {
             echo '<div>COURSE SHORTNAME: ' . htmlspecialchars($record['COURSE_SHORTNAME']) . '</div>';
             echo '<div title="The datetime they clicked Enrol in ELM">COURSE_STATE_DATE: ' . htmlspecialchars($record['COURSE_STATE_DATE']) . '</div>';
             echo '<div>User Status (Moodle): <a href="/user/view.php?id=' . $user->id . '">' . $user_status . '</a></div>'; // Show enrollment status
-            echo '<div>Enrollment Status (Moodle): <a href="/user/index.php?id=' . $moodlecourseid . '">' . $enrol_status . '</a></div>'; // Show enrollment status
             echo '<div>FIRST NAME: ' . htmlspecialchars($record['FIRST_NAME']) . '</div>';
             echo '<div>LAST NAME: ' . htmlspecialchars($record['LAST_NAME']) . '</div>';
             echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . ' (moodle) ' . $user->email . '</div>';
             echo '<div>GUID: (cdata) ' . htmlspecialchars($record['GUID']) . '</div>';
+            echo '<div>GUID: (moodle) ' . $user->idnumber . '</div>';
             echo '<div>USER STATE (cdata): ' . htmlspecialchars($record['USER_STATE']) . '</div>';
             
             if(!empty($logs)) {
