@@ -353,7 +353,10 @@ function create_new_user($user_email, $first_name, $last_name, $user_guid) {
     <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
     <button type="submit" class="btn btn-primary"><?php echo get_string('submit', 'local_psaelmsync'); ?></button>
 </form>
-<div>Query: <input type="text" name="queryurl" class="form-field" value="<?= $apiurlfiltered ?>"></div>
+<div>   
+    Query: <input type="text" name="queryurl" class="form-field" value="<?= $apiurlfiltered ?>">
+    <a href="<?= $apiurlfiltered ?>" class="btn btn-sm btn-secondary" target="_blank">Launch</a> (VPN required; IP whitelist required)
+</div>
 <!-- Result section where the fetched records will be displayed -->
 <?php
 if (!empty($data)) {
