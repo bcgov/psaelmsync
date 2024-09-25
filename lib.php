@@ -245,7 +245,7 @@ function process_enrolment_record($record) {
     // Even if we find a user by the provided GUID, we also need to check
     // to see if the email address associated with the account is consistent
     // with this CData record. If it isn't then we notify admins and error out.
-    if ($user->email != $user_email) {
+    if (strtolower($user->email) != strtolower($user_email)) {
 
         // Check if another user already has the new email address
         $useremailcheck = $DB->get_record('user', ['email' => $user_email]);
