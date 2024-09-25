@@ -542,6 +542,7 @@ function send_failure_notification($type, $first_name, $last_name, $email, $erro
             $recipient->id = -99; // Dummy user id
             $recipient->firstname = 'Admin';
             $recipient->lastname = 'User';
+            $recipient->mailformat = 1; // Force HTML format
             
             // Send the email
             email_to_user($recipient, $dummyuser, $subject, $message);
