@@ -390,7 +390,7 @@ if (!empty($data)) {
                                                 'user_id' => $user->id
                                             ], 
                                             '', 
-                                            'timestamp, action, user_guid');
+                                            'timestamp, action, user_guid, user_email');
 
             } 
             
