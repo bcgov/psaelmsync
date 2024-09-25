@@ -1,6 +1,9 @@
 <?php
 defined('MOODLE_INTERNAL') || die();
 
+require_once('../../config.php');
+require_once($CFG->dirroot . '/user/lib.php');
+
 function local_psaelmsync_sync() {
 
     global $DB;
@@ -388,11 +391,11 @@ function create_user($first_name, $last_name, $email, $guid) {
     global $DB;
 
     $user = new stdClass();
-    $user->auth = 'manual';
+    $user->auth = 'oauth2';
     $uname = strtolower($email);
     $user->username = $uname;
     $user->mnethostid = 1;
-    $user->password = hash_internal_user_password('Chang3m3Please!');
+    $user->password = hash_internal_user_password(random_string(8));
     $user->firstname = $first_name;
     $user->lastname = $last_name;
     $user->email = $email;
@@ -402,8 +405,7 @@ function create_user($first_name, $last_name, $email, $guid) {
     $user->timecreated = time();
     $user->timemodified = time();
 
-    $user_id = $DB->insert_record('user', $user);
-    $user->id = $user_id;
+    $user->id = user_create_user($user, true, false);
 
     return $user;
 }
