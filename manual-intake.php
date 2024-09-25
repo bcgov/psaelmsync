@@ -366,7 +366,7 @@ if (!empty($data)) {
             $coursefullname = 'Cannot find course.';
             $moodlecourseid = 0;
             $courseidnum = (int) $record['COURSE_IDENTIFIER'];
-            if ($course = $DB->get_record('course', array('idnumber' => $courseidnum), 'fullname')) {
+            if ($course = $DB->get_record('course', array('idnumber' => $courseidnum), 'id, fullname')) {
                 $coursefullname = $course->fullname;
                 $moodlecourseid = $course->id;
             }
@@ -409,9 +409,16 @@ if (!empty($data)) {
             echo '<div>User Status (Moodle): <a href="/user/view.php?id=' . $user->id . '">' . $user_status . '</a></div>'; // Show enrollment status
             echo '<div>FIRST NAME: ' . htmlspecialchars($record['FIRST_NAME']) . '</div>';
             echo '<div>LAST NAME: ' . htmlspecialchars($record['LAST_NAME']) . '</div>';
-            echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . ' (moodle) ' . $user->email . '</div>';
+            echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . '</div>';
+            echo '<div>EMAIL: (moodle) ' . $user->email . '</div>';
+            if($record['EMAIL'] != $user->email) {
+                echo '<div><strong>Email mismatch!</strong></div>';
+            }
             echo '<div>GUID: (cdata) ' . htmlspecialchars($record['GUID']) . '</div>';
             echo '<div>GUID: (moodle) ' . $user->idnumber . '</div>';
+            if($record['GUID'] != $user->idnumber) {
+                echo '<div><strong>GUID mismatch!</strong></div>';
+            }
             echo '<div>USER STATE (cdata): ' . htmlspecialchars($record['USER_STATE']) . '</div>';
             
             if(!empty($logs)) {
@@ -431,18 +438,20 @@ if (!empty($data)) {
             if($record['COURSE_STATE'] == 'Enrol' && $enrol_status == 'Enrolled' || $record['COURSE_STATE'] == 'Suspend' && $enrol_status == 'Not Enrolled') {
                 // 
             } else {
-                echo '<form method="post" action="' . $PAGE->url . '">';
-                echo '<input type="hidden" name="elm_course_id" value="' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
-                echo '<input type="hidden" name="record_date_created" value="' . htmlspecialchars($record['date_created']) . '">';
-                echo '<input type="hidden" name="course_state" value="' . htmlspecialchars($record['COURSE_STATE']) . '">';
-                echo '<input type="hidden" name="class_code" value="' . htmlspecialchars($record['COURSE_SHORTNAME']) . '">';
-                echo '<input type="hidden" name="guid" value="' . htmlspecialchars($record['GUID']) . '">';
-                echo '<input type="hidden" name="email" value="' . htmlspecialchars($record['EMAIL']) . '">';
-                echo '<input type="hidden" name="first_name" value="' . htmlspecialchars($record['FIRST_NAME']) . '">';
-                echo '<input type="hidden" name="last_name" value="' . htmlspecialchars($record['LAST_NAME']) . '">';
-                echo '<input type="hidden" name="sesskey" value="' . sesskey() . '">';
-                echo '<button type="submit" name="process" class="btn btn-primary">Process</button>';
-                echo '</form>';
+                if(!empty($moodlecourseid)) {
+                    echo '<form method="post" action="' . $PAGE->url . '">';
+                    echo '<input type="hidden" name="elm_course_id" value="' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
+                    echo '<input type="hidden" name="record_date_created" value="' . htmlspecialchars($record['date_created']) . '">';
+                    echo '<input type="hidden" name="course_state" value="' . htmlspecialchars($record['COURSE_STATE']) . '">';
+                    echo '<input type="hidden" name="class_code" value="' . htmlspecialchars($record['COURSE_SHORTNAME']) . '">';
+                    echo '<input type="hidden" name="guid" value="' . htmlspecialchars($record['GUID']) . '">';
+                    echo '<input type="hidden" name="email" value="' . htmlspecialchars($record['EMAIL']) . '">';
+                    echo '<input type="hidden" name="first_name" value="' . htmlspecialchars($record['FIRST_NAME']) . '">';
+                    echo '<input type="hidden" name="last_name" value="' . htmlspecialchars($record['LAST_NAME']) . '">';
+                    echo '<input type="hidden" name="sesskey" value="' . sesskey() . '">';
+                    echo '<button type="submit" name="process" class="btn btn-primary">Process</button>';
+                    echo '</form>';
+                }
             }
             echo '</div>';
         }
