@@ -425,8 +425,8 @@ if (!empty($data)) {
                 echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . ' (moodle) ' . htmlspecialchars($user->email) . '</div>';
                 
                 // Check for email mismatch
-                if ($record['EMAIL'] != $user->email) {
-                    echo '<div><strong>Email mismatch!</strong></div>';
+                if (strotolower($record['EMAIL']) != strotolower($user->email)) {
+                    echo '<div class="alert alert-warning"><strong>Email mismatch!</strong></div>';
                 }
                 
                 echo '<div>GUID: (cdata) ';
@@ -437,7 +437,7 @@ if (!empty($data)) {
                 
                 // Check for GUID mismatch
                 if ($record['GUID'] != $user->idnumber) {
-                    echo '<div><strong>GUID mismatch!</strong></div>';
+                    echo '<div class="alert alert-warning"><strong>GUID mismatch!</strong></div>';
                 }
             } else {
                 // If the user doesn't exist, just show external data (no Moodle comparisons)
@@ -462,7 +462,7 @@ if (!empty($data)) {
                     echo '</a></div>';
                 }
             } else {
-                echo '<div>No matching records found.</div>';
+                echo '<div>No matching logs found.</div>';
             }
 
             // Display a process form if needed
