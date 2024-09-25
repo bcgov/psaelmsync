@@ -453,7 +453,7 @@ if (!empty($data)) {
 
             // Display existing logs if any
             if (!empty($logs)) {
-                echo '<h2 class="fs-6">Existing logs for this course</h2>';
+                echo '<div class=""><strong>Existing logs for this course</strong></div>';
                 foreach ($logs as $l) {
                     $iso8601 = date('Y-m-d H:i:s', (int) $l->timestamp);
                     echo '<div class="p-2 m-1 bg-white rounded-lg">';
