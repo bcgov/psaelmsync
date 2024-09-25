@@ -444,7 +444,7 @@ if (!empty($data)) {
                 echo '<div>EMAIL: (moodle) ' . htmlspecialchars($user->email) . '</div>';
                 
                 // Check for email mismatch
-                if (strotolower($record['EMAIL']) != strotolower($user->email)) {
+                if (strtolower($record['EMAIL']) != strtolower($user->email)) {
                     echo '<div class="alert alert-warning"><strong>Email mismatch!</strong></div>';
                 }
                 
