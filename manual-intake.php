@@ -363,20 +363,25 @@ if (!empty($data)) {
         // Loop through the records and display them
         foreach ($data['value'] as $record) {
             $logs = [];
-            $coursefullname = 'Cannot find course.';
+            $coursefullname = '<strong>Cannot find course.</strong>';
             $moodlecourseid = 0;
             $courseidnum = (int) $record['COURSE_IDENTIFIER'];
+            
+            // Fetch the course based on idnumber
             if ($course = $DB->get_record('course', array('idnumber' => $courseidnum), 'id, fullname')) {
                 $coursefullname = $course->fullname;
                 $moodlecourseid = $course->id;
             }
 
-            echo '<div class="col-md-3 m-2 p-3 bg-light rounded-lg">';
-            // Find the user by email
+            echo '<div class="col-md-3">';
+            echo '<div class="m-2 p-3 bg-light rounded-lg">';
+            // Find the user by GUID
             $user = $DB->get_record('user', ['idnumber' => $record['GUID']]);
-            // $user = $DB->get_record('user', ['email' => $record['EMAIL']]);
+            
             $enrol_status = 'Not Enrolled';
             $user_status = "Doesn't exist";
+            
+            // Check if user exists
             if ($user) {
                 // Check if the user is enrolled in the course
                 if (check_user_enrolment_status($record['COURSE_IDENTIFIER'], $user->id)) {
@@ -384,7 +389,8 @@ if (!empty($data)) {
                 }
                 $user_status = "User exists";
                 $elmcourseid = $record['COURSE_IDENTIFIER'];
-                // Get enrolment_id and another field (e.g., status) from local_psaelmsync_logs table.
+                
+                // Get enrolment logs from local_psaelmsync_logs table
                 $logs = $DB->get_records('local_psaelmsync_logs', 
                                             [
                                                 'elm_course_id' => $elmcourseid, 
@@ -392,44 +398,61 @@ if (!empty($data)) {
                                             ], 
                                             '', 
                                             'timestamp, action, user_guid, user_email');
+            }
 
-            } 
-            
+            // Display course and user data
             echo '<div>DATE CREATED: ' . htmlspecialchars($record['date_created']) . '</div>';
             echo '<div>COURSE STATE: <strong>' . htmlspecialchars($record['COURSE_STATE']) . '</strong></div>';
-
-            echo '<div>Enrollment Status (Moodle): <a href="/user/index.php?id=' . $moodlecourseid . '">' . $enrol_status . '</a></div>'; // Show enrollment status
-
-            echo '<div>COURSE IDENTIFIER: ';
-            echo '<a href="/course/view.php?idnumber=' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
-            echo htmlspecialchars($record['COURSE_IDENTIFIER']);
-            echo '</a> - ' . $coursefullname . '</div>';
+            if(!empty($moodlecourseid)) {
+                echo '<div>Enrollment Status (Moodle): <a href="/user/index.php?id=' . $moodlecourseid . '">' . $enrol_status . '</a></div>'; 
+            } else {
+                echo '<div>Enrollment Status (Moodle): ' . $enrol_status . '</div>'; 
+            }
+            echo '<div>COURSE IDENTIFIER: <a href="/course/view.php?idnumber=' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '</a> - ' . $coursefullname . '</div>';
             echo '<div>COURSE SHORTNAME: ' . htmlspecialchars($record['COURSE_SHORTNAME']) . '</div>';
             echo '<div title="The datetime they clicked Enrol in ELM">COURSE_STATE_DATE: ' . htmlspecialchars($record['COURSE_STATE_DATE']) . '</div>';
-            echo '<div>User Status (Moodle): <a href="/user/view.php?id=' . $user->id . '">' . $user_status . '</a></div>'; // Show enrollment status
-            echo '<div>FIRST NAME: ' . htmlspecialchars($record['FIRST_NAME']) . '</div>';
-            echo '<div>LAST NAME: ' . htmlspecialchars($record['LAST_NAME']) . '</div>';
-            echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . '</div>';
-            echo '<div>EMAIL: (moodle) ' . $user->email . '</div>';
-            if($record['EMAIL'] != $user->email) {
-                echo '<div><strong>Email mismatch!</strong></div>';
-            }
-            echo '<div>GUID: (cdata) ';
-            echo '<a href="/local/psaelmsync/dashboard.php?search=' . htmlspecialchars($record['GUID']) . '">';
-            echo htmlspecialchars($record['GUID']);
-            echo '</a></div>';
-            echo '<div>GUID: (moodle) ' . $user->idnumber . '</div>';
-            if($record['GUID'] != $user->idnumber) {
-                echo '<div><strong>GUID mismatch!</strong></div>';
-            }
-            echo '<div>USER STATE (cdata): ' . htmlspecialchars($record['USER_STATE']) . '</div>';
             
-            if(!empty($logs)) {
-                echo '<h4>Existing logs for this course</h4>';
-                foreach($logs as $l) {
+            // If the user exists, compare the Moodle and external data for mismatches
+            if ($user) {
+                echo '<div>User Status (Moodle): <a href="/user/view.php?id=' . $user->id . '">' . $user_status . '</a></div>';
+                echo '<div>FIRST NAME: ' . htmlspecialchars($record['FIRST_NAME']) . '</div>';
+                echo '<div>LAST NAME: ' . htmlspecialchars($record['LAST_NAME']) . '</div>';
+                echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . ' (moodle) ' . htmlspecialchars($user->email) . '</div>';
+                
+                // Check for email mismatch
+                if ($record['EMAIL'] != $user->email) {
+                    echo '<div><strong>Email mismatch!</strong></div>';
+                }
+                
+                echo '<div>GUID: (cdata) ';
+                echo '<a href="/local/psaelmsync/dashboard.php?search=' . htmlspecialchars($record['GUID']) . '">';
+                echo htmlspecialchars($record['GUID']);
+                echo '</a></div>';
+                echo '<div>GUID: (moodle) ' . htmlspecialchars($user->idnumber) . '</div>';
+                
+                // Check for GUID mismatch
+                if ($record['GUID'] != $user->idnumber) {
+                    echo '<div><strong>GUID mismatch!</strong></div>';
+                }
+            } else {
+                // If the user doesn't exist, just show external data (no Moodle comparisons)
+                echo '<div>User Status: ' . $user_status . '</div>';
+                echo '<div>FIRST NAME: ' . htmlspecialchars($record['FIRST_NAME']) . '</div>';
+                echo '<div>LAST NAME: ' . htmlspecialchars($record['LAST_NAME']) . '</div>';
+                echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . '</div>';
+                echo '<div>GUID: (cdata) ';
+                echo '<a href="/local/psaelmsync/dashboard.php?search=' . htmlspecialchars($record['GUID']) . '">';
+                echo htmlspecialchars($record['GUID']);
+                echo '</a></div>';
+            }
+
+            // Display existing logs if any
+            if (!empty($logs)) {
+                echo '<h2 class="fs-6">Existing logs for this course</h2>';
+                foreach ($logs as $l) {
                     $iso8601 = date('Y-m-d H:i:s', (int) $l->timestamp);
                     echo '<div class="p-2 m-1 bg-white rounded-lg">';
-                    echo '<a href="/local/psaelmsync/dashboard.php?search='. urlencode($iso8601) . '">';
+                    echo '<a href="/local/psaelmsync/dashboard.php?search=' . urlencode($iso8601) . '">';
                     echo $iso8601 . ' - ' . $l->action . ' - ' . $l->user_email . ' - ' . $l->user_guid;
                     echo '</a></div>';
                 }
@@ -437,11 +460,11 @@ if (!empty($data)) {
                 echo '<div>No matching records found.</div>';
             }
 
-            // The following is kinda ridiculous. Rethink.
-            if($record['COURSE_STATE'] == 'Enrol' && $enrol_status == 'Enrolled' || $record['COURSE_STATE'] == 'Suspend' && $enrol_status == 'Not Enrolled') {
-                // 
+            // Display a process form if needed
+            if (($record['COURSE_STATE'] == 'Enrol' && $enrol_status == 'Enrolled') || ($record['COURSE_STATE'] == 'Suspend' && $enrol_status == 'Not Enrolled')) {
+                // Do nothing
             } else {
-                if(!empty($moodlecourseid)) {
+                if (!empty($moodlecourseid)) {
                     echo '<form method="post" action="' . $PAGE->url . '">';
                     echo '<input type="hidden" name="elm_course_id" value="' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
                     echo '<input type="hidden" name="record_date_created" value="' . htmlspecialchars($record['date_created']) . '">';
@@ -456,10 +479,11 @@ if (!empty($data)) {
                     echo '</form>';
                 }
             }
+
+            echo '</div>';
             echo '</div>';
         }
         echo '</div>';
-
     } else {
         echo '<div class="alert alert-warning">No data found for the selected dates.</div>';
     }
