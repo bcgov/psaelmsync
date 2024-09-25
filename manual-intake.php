@@ -462,7 +462,7 @@ if (!empty($data)) {
                     echo '</a></div>';
                 }
             } else {
-                echo '<div>No matching logs found.</div>';
+                echo '<div class="alert alert-secondary">No matching logs found.</div>';
             }
 
             // Display a process form if needed
