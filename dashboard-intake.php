@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <p>At most, there will be 72 intake runs a day (6 an hour for 12 hours). 
             This page shows the past 100 runs, with each page representing about
             a day and a half worth of enrolment day.</p>
-
+        <p>Since Sept. 4, 2024: 
         <?php
         $sql = "SELECT 
                     SUM(enrolcount) AS total_enrols, 
@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
             echo "No data available.";
         }
         ?>
+        </p>
 
         <div style="height: 320px;">
             <canvas id="runsChart"></canvas>
