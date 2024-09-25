@@ -353,7 +353,7 @@ function create_new_user($user_email, $first_name, $last_name, $user_guid) {
     <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
     <button type="submit" class="btn btn-primary"><?php echo get_string('submit', 'local_psaelmsync'); ?></button>
 </form>
-
+<div>Query: <?= $apiurlfiltered ?></div>
 <!-- Result section where the fetched records will be displayed -->
 <?php
 if (!empty($data)) {
@@ -373,7 +373,7 @@ if (!empty($data)) {
                 $moodlecourseid = $course->id;
             }
 
-            echo '<div class="col-md-3">';
+            echo '<div class="col-md-4">';
             echo '<div class="m-2 p-3 bg-light rounded-lg">';
             // Find the user by GUID
             $user = $DB->get_record('user', ['idnumber' => $record['GUID']]);
