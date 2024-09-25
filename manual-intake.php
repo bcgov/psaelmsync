@@ -440,7 +440,8 @@ if (!empty($data)) {
                 echo '<div>User Status (Moodle): <a href="/user/view.php?id=' . $user->id . '">' . $user_status . '</a></div>';
                 echo '<div>FIRST NAME: ' . htmlspecialchars($record['FIRST_NAME']) . '</div>';
                 echo '<div>LAST NAME: ' . htmlspecialchars($record['LAST_NAME']) . '</div>';
-                echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . ' (moodle) ' . htmlspecialchars($user->email) . '</div>';
+                echo '<div>EMAIL: (cdata) ' . htmlspecialchars($record['EMAIL']) . '</div>';
+                echo '<div>EMAIL: (moodle) ' . htmlspecialchars($user->email) . '</div>';
                 
                 // Check for email mismatch
                 if (strotolower($record['EMAIL']) != strotolower($user->email)) {
