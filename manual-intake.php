@@ -55,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hash = hash('sha256', $hash_content);
 
         $hashcheck = $DB->get_record('local_psaelmsync_logs', ['sha256hash' => $hash], '*', IGNORE_MULTIPLE);
-
         // Does the hash exist in the table? 
         if ($hashcheck) {
             $feedback = 'This has already been processed.';
@@ -224,6 +223,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $to = required_param('to', PARAM_TEXT);
         $user_emaillookup = required_param('emaillookup', PARAM_TEXT);
         $user_guidlookup = required_param('guidlookup', PARAM_TEXT);
+        // #TODO Update this so that it's not either/or; able to combine email/guid 
+        // with a date range.
         if(!empty($user_emaillookup)) {
             // $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to); // MOCK API format
             $apiurlfiltered = $apiurl . "&%24filter=email+eq+%27" . urlencode($user_emaillookup) . "%27";
@@ -284,6 +285,7 @@ function check_user_enrolment_status($courseidnumber, $userid) {
 }
 
 // Helper function to create a new user
+// #TODO this likely doesn't need to be here; should be able to use from lib.php
 function create_new_user($user_email, $first_name, $last_name, $user_guid) {
     global $DB;
 
@@ -295,7 +297,7 @@ function create_new_user($user_email, $first_name, $last_name, $user_guid) {
     $user->lastname = $last_name;
     $user->password = hash_internal_user_password(random_string(8));
     $user->confirmed = 1; // Confirmed account
-    $user->auth = 'manual'; // Manual authentication
+    $user->auth = 'oauth2';
     $user->emailformat = 1; // 1 for HTML, 0 for plain text
     $user->mnethostid = 1;
     $user->timecreated = time();
