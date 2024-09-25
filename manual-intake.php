@@ -401,7 +401,7 @@ if (!empty($data)) {
             }
 
             // Display course and user data
-            echo '<div>DATE CREATED: ' . htmlspecialchars($record['date_created']) . '</div>';
+            echo '<div>DATE CREATED:<br> ' . htmlspecialchars($record['date_created']) . '</div>';
             echo '<div>COURSE STATE: <strong>' . htmlspecialchars($record['COURSE_STATE']) . '</strong></div>';
             if(!empty($moodlecourseid)) {
                 echo '<div>Enrollment Status (Moodle): <a href="/user/index.php?id=' . $moodlecourseid . '">' . $enrol_status . '</a></div>'; 
