@@ -404,7 +404,25 @@ if (!empty($data)) {
                                             '', 
                                             'timestamp, action, user_guid, user_email');
             }
-
+            // Display a process form if needed
+            if (($record['COURSE_STATE'] == 'Enrol' && $enrol_status == 'Enrolled') || ($record['COURSE_STATE'] == 'Suspend' && $enrol_status == 'Not Enrolled')) {
+                // Do nothing
+            } else {
+                if (!empty($moodlecourseid)) {
+                    echo '<form class="float-right ml-4" method="post" action="' . $PAGE->url . '">';
+                    echo '<input type="hidden" name="elm_course_id" value="' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
+                    echo '<input type="hidden" name="record_date_created" value="' . htmlspecialchars($record['date_created']) . '">';
+                    echo '<input type="hidden" name="course_state" value="' . htmlspecialchars($record['COURSE_STATE']) . '">';
+                    echo '<input type="hidden" name="class_code" value="' . htmlspecialchars($record['COURSE_SHORTNAME']) . '">';
+                    echo '<input type="hidden" name="guid" value="' . htmlspecialchars($record['GUID']) . '">';
+                    echo '<input type="hidden" name="email" value="' . htmlspecialchars($record['EMAIL']) . '">';
+                    echo '<input type="hidden" name="first_name" value="' . htmlspecialchars($record['FIRST_NAME']) . '">';
+                    echo '<input type="hidden" name="last_name" value="' . htmlspecialchars($record['LAST_NAME']) . '">';
+                    echo '<input type="hidden" name="sesskey" value="' . sesskey() . '">';
+                    echo '<button type="submit" name="process" class="btn btn-primary">Process</button>';
+                    echo '</form>';
+                }
+            }
             // Display course and user data
             echo '<div>DATE CREATED:<br> ' . htmlspecialchars($record['date_created']) . '</div>';
             echo '<div>COURSE STATE: <strong>' . htmlspecialchars($record['COURSE_STATE']) . '</strong></div>';
@@ -465,25 +483,7 @@ if (!empty($data)) {
                 echo '<div class="alert alert-secondary">No matching logs found.</div>';
             }
 
-            // Display a process form if needed
-            if (($record['COURSE_STATE'] == 'Enrol' && $enrol_status == 'Enrolled') || ($record['COURSE_STATE'] == 'Suspend' && $enrol_status == 'Not Enrolled')) {
-                // Do nothing
-            } else {
-                if (!empty($moodlecourseid)) {
-                    echo '<form method="post" action="' . $PAGE->url . '">';
-                    echo '<input type="hidden" name="elm_course_id" value="' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
-                    echo '<input type="hidden" name="record_date_created" value="' . htmlspecialchars($record['date_created']) . '">';
-                    echo '<input type="hidden" name="course_state" value="' . htmlspecialchars($record['COURSE_STATE']) . '">';
-                    echo '<input type="hidden" name="class_code" value="' . htmlspecialchars($record['COURSE_SHORTNAME']) . '">';
-                    echo '<input type="hidden" name="guid" value="' . htmlspecialchars($record['GUID']) . '">';
-                    echo '<input type="hidden" name="email" value="' . htmlspecialchars($record['EMAIL']) . '">';
-                    echo '<input type="hidden" name="first_name" value="' . htmlspecialchars($record['FIRST_NAME']) . '">';
-                    echo '<input type="hidden" name="last_name" value="' . htmlspecialchars($record['LAST_NAME']) . '">';
-                    echo '<input type="hidden" name="sesskey" value="' . sesskey() . '">';
-                    echo '<button type="submit" name="process" class="btn btn-primary">Process</button>';
-                    echo '</form>';
-                }
-            }
+            
 
             echo '</div>';
             echo '</div>';
