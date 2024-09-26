@@ -166,6 +166,29 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             echo "No data available.";
         }
+        ?></p>
+        <p>
+        <?php
+        // Get today's start and end timestamps
+        $start_of_day = strtotime("today 00:00:00");
+        $end_of_day = strtotime("tomorrow 00:00:00") - 1;
+
+        $sql = "SELECT 
+                    SUM(enrolcount) AS total_enrols, 
+                    SUM(suspendcount) AS total_suspends, 
+                    SUM(errorcount) AS total_errors
+                FROM {local_psaelmsync_runs}
+                WHERE timecreated >= :start_of_day AND timecreated <= :end_of_day";
+
+        $daytotals = $DB->get_record_sql($sql, ['start_of_day' => $start_of_day, 'end_of_day' => $end_of_day]);
+
+        if ($daytotals) {
+            echo "Total Enrols Today: " . $daytotals->total_enrols . " ";
+            echo "Total Suspends Today: " . $daytotals->total_suspends . " ";
+            echo "Total Errors Today: " . $daytotals->total_errors . " ";
+        } else {
+            echo "No data available for today.";
+        }
         ?>
         </p>
 
