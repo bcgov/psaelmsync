@@ -1,9 +1,6 @@
 <?php
 defined('MOODLE_INTERNAL') || die();
 
-require_once('../../config.php');
-require_once($CFG->dirroot . '/user/lib.php');
-
 function local_psaelmsync_sync() {
 
     global $DB;
