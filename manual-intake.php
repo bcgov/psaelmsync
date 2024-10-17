@@ -261,28 +261,7 @@ if (!empty($feedback)) {
     echo '<div class="alert alert-info">' . $feedback . '</div>';
 }
 
-// Helper function to check if the user is enrolled in the course
-function check_user_enrolment_status($courseidnumber, $userid) {
-    global $DB;
-
-    // Find the course by idnumber
-    $course = $DB->get_record('course', ['idnumber' => $courseidnumber]);
-    if (!$course) {
-        return 'Course not found';
-    }
-
-    // Check if the user is enrolled in the course using enrol_get_users_courses()
-    $user_courses = enrol_get_users_courses($userid, true, ['id']);
-    
-    // Iterate through courses the user is enrolled in
-    foreach ($user_courses as $user_course) {
-        if ($user_course->id == $course->id) {
-            // User is enrolled in this course
-            return true;
-        }
-    }
-    return false;
-}
+// check_user_enrolment_status() now lives in lib.php
 
 // Helper function to create a new user
 // #TODO this likely doesn't need to be here; should be able to use from lib.php

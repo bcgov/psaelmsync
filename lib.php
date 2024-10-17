@@ -64,6 +64,7 @@ function local_psaelmsync_sync() {
     $suspendcount = 0;
     $errorcount = 0;
     $skippedcount = 0;
+    $enrolnewcount = 0;
     
     // This is the primary loop where we start to look at each record
     foreach ($data['value'] as $record) {
@@ -79,6 +80,7 @@ function local_psaelmsync_sync() {
         if($t == 'Suspend') $suspendcount++;
         if($t == 'Error') $errorcount++;
         if($t == 'Skipped') $skippedcount++;
+        if($t == 'Enrol New') $enrolnewcount++;
     }
     // Log the end of the run time.
     $runlogendtime = floor(microtime(true) * 1000);
@@ -90,7 +92,10 @@ function local_psaelmsync_sync() {
             'enrolcount' => $enrolcount,
             'suspendcount' => $suspendcount,
             'errorcount' => $errorcount,
-            'skippedcount' => $skippedcount
+            'skippedcount' => $skippedcount,
+            'enrolnewcount' => $enrolnewcount,
+            'manualenrolcount' => 0,
+            'manualsuspendcount' => 0,
         ];
     $DB->insert_record('local_psaelmsync_runs', (object)$log);
 
@@ -183,17 +188,19 @@ function process_enrolment_record($record) {
                     $user_email, 
                     $user_guid, 
                     'Course not found',
-                    'Error');
+                    'Error',
+                    '');
         
         send_failure_notification('coursefail', $first_name, $last_name, $user_email, $elm_course_id);
         $e = 'Error';
         return $e;
     }
 
-    // Check if user exists by GUID     .
+    // Check if user exists by GUID
     if ($user = $DB->get_record('user', array('idnumber' => $user_guid),'*')) {
 
         $user_id = $user->id;
+        $enrolnew = 0; // No new user was created; used to change the status type.
 
     } else {
         // Attempt to create a new user, handle any exceptions gracefully.
@@ -201,6 +208,8 @@ function process_enrolment_record($record) {
 
             $user = create_user($first_name, $last_name, $user_email, $user_guid);
             $user_id = $user->id;
+
+            $enrolnew = 1; // A new user was created; used to change the status type.
 
         } catch (Exception $e) {
 
@@ -231,7 +240,8 @@ function process_enrolment_record($record) {
                         $user_email, 
                         $user_guid, 
                         'User create failure',
-                        'Error');
+                        'Error',
+                        '');
             
             // Send an email notification
             send_failure_notification('userfail', $first_name, $last_name, $user_email, $error_message);
@@ -270,7 +280,7 @@ function process_enrolment_record($record) {
 
         } else { // There IS another account with this email or username
             
-            // Should we do further checks here to see if the other account 
+            // #TODO Should we do further checks here to see if the other account 
             // has ever been logged into? Is it enrolled in anything else?
             // If it's a blank account maybe make the decision to delete it.
             // 
@@ -307,8 +317,9 @@ function process_enrolment_record($record) {
                     $last_name, 
                     $user_email, 
                     $user_guid, 
-                    'Email Mistatch',
-                    'Error');
+                    'Email Mismatch', // Originally had a typo "mistatch" 
+                    'Error',
+                    '');
         
         // Send the email notification
         send_failure_notification('emailmismatch', $first_name, $last_name, $user_email, $message);
@@ -317,26 +328,75 @@ function process_enrolment_record($record) {
         return $e;
     }
 
-    if ($enrolment_status == 'Enrol') {
-        // Enrol the user in the course.
-        $enrol = enrol_get_plugin('manual');
-        if ($enrol) {
-            $instance = $DB->get_record('enrol', array('courseid' => $course->id, 'enrol' => 'manual'), '*', MUST_EXIST);
-            $enrol->enrol_user($instance, $user_id, $instance->roleid, 0, 0, ENROL_USER_ACTIVE);
+
+    // OK so now we know that the course exists, and that the user exists with 
+    // the same GUID and email address as in the incoming record. 
+    // Lookup whether a person is enrolled before taking any further actions
+    $current_enrol_status = 0;
+    if (check_user_enrolment_status($course->id, $user->id)) {
+        $current_enrol_status = 1;
+    }
+
+    if ($enrolment_status === 'Enrol') {
+
+        // This person is already enrolled in this course, so why is there 
+        // another record here? This is a duplicate record sent from ELM at 
+        // a different time so it fails the hash check, but we still don't
+        // want to process it. We should still log it though so that we can
+        // see that this has happened.
+        if($current_enrol_status === 1) {
+            $action = 'Dupe Enrol';
+            $status = 'Error';
+            // #TODO send an email
+
+        } else {
+
+            // Enrol the user in the course.
+            $enrol = enrol_get_plugin('manual');
+            if ($enrol) {
+                $instance = $DB->get_record('enrol', 
+                                                array(
+                                                    'courseid' => $course->id, 
+                                                    'enrol' => 'manual'
+                                                ), 
+                                                '*', 
+                                                MUST_EXIST
+                                            );
+                $enrol->enrol_user($instance, $user_id, $instance->roleid, 0, 0, ENROL_USER_ACTIVE);
+            }
+            send_welcome_email($user, $course);
+            $action = 'Enrol';
+            $status = 'Success';
         }
 
-        send_welcome_email($user, $course);
+        // We need to differentiate between enrolments for accounts that already 
+        // exist and the enrolments where a new account is created.
+        if($enrolnew && $enrolment_status === 'Enrol') {
+            $enrolment_status = 'Enrol New';
+        }
 
-        $action = 'Enrol';
-        // #TODO If this is a record where there was an email mismatch and the 
-        // account was updated, we should perhaps not log it as a normal
-        // 'enrol'? NOTE that this has repercussions for counts we do for 
-        // enrol, drop, error, skip and to add a new type of action requires
-        // updating the DB with a corresponding field in _runs table.
-        // if($emailmismatch > 0) {
-        //     $action = 'Enrol Update Email';
-        // }
-        log_record($record_id, 
+
+    } elseif ($enrolment_status === 'Suspend') {
+
+        // This person isn't enrolled in this course, which means it's a duplicate
+        // or someting else is going on; either way, we don't want to drop them and
+        // want to log the issue as an error.
+        if($current_enrol_status === 0) {
+            $action = 'Dupe Suspend';
+            $status = 'Error';
+            // #TODO send an email
+
+        } else {
+
+            // Suspend the user in the course.
+            suspend_user_in_course($user_id, $course->id, $elm_course_id);
+            $action = 'Suspend';
+            $status = 'Success';
+        }
+        
+    }
+
+    log_record($record_id, 
                     $hash, 
                     $record_date_created, 
                     $course->id, 
@@ -349,37 +409,12 @@ function process_enrolment_record($record) {
                     $user_email, 
                     $user_guid, 
                     $action, 
-                    'Success');
-
-    } elseif ($enrolment_status == 'Suspend') {
-        // Suspend the user in the course.
-        suspend_user_in_course($user_id, $course->id, $elm_course_id);
-
-        // #TODO send a drop email?? 
-        
-        $action = 'Suspend';
-        // See above comment in enrol about this.
-        // if($emailmismatch > 0) {
-        //     $action = 'Suspend Update Email';
-        // }
-        log_record($record_id, 
-                    $hash, 
-                    $record_date_created, 
-                    $course->id,
-                    $elm_course_id, 
-                    $class_code, 
-                    $enrolment_id, 
-                    $user_id, 
-                    $first_name, 
-                    $last_name, 
-                    $user_email, 
-                    $user_guid, 
-                    $action, 
-                    'Success');
-    }
+                    $status,
+                    '');
     
     // We return the enrolment_status so that we can count enrols and suspends
-    // when we log the run.
+    // and errors when we log the run.
+
     return $enrolment_status;
 
 }
@@ -452,7 +487,22 @@ function send_welcome_email($user, $course) {
     email_to_user($user, core_user::get_support_user(), $subject, $plaintext_message, $html_message);
 }
 
-function log_record($record_id, $hash, $record_date_created, $course_id, $elm_course_id, $class_code, $enrolment_id, $user_id, $first_name, $last_name, $user_email, $user_guid, $action, $status) {
+function log_record($record_id, 
+                        $hash, 
+                        $record_date_created, 
+                        $course_id, 
+                        $elm_course_id, 
+                        $class_code, 
+                        $enrolment_id, 
+                        $user_id, 
+                        $first_name, 
+                        $last_name, 
+                        $user_email, 
+                        $user_guid, 
+                        $action, 
+                        $status,
+                        $note
+                    ) {
     global $DB;
 
     // Ensure course_id is valid before lookup
@@ -480,6 +530,8 @@ function log_record($record_id, $hash, $record_date_created, $course_id, $elm_co
     $log->action = $action;
     $log->status = $status;
     $log->timestamp = time();
+    $log->note = $note;
+    $log->admin_user_id = 2;
 
     $DB->insert_record('local_psaelmsync_logs', $log);
 }
@@ -607,4 +659,29 @@ function send_inactivity_notification($notificationhours) {
             email_to_user($recipient, $dummyuser, $subject, $message);
         }
     }
+}
+
+// Helper function to check if the user is enrolled in the course
+function check_user_enrolment_status($courseidnumber, $userid) {
+    global $DB;
+
+    // Find the course by idnumber
+    // #TODO probably don't need this as we're checking for it
+    // earlier in the code; this wouldn't get called othersise.
+    $course = $DB->get_record('course', ['idnumber' => $courseidnumber]);
+    if (!$course) {
+        return 'Course not found';
+    }
+
+    // Check if the user is enrolled in the course using enrol_get_users_courses()
+    $user_courses = enrol_get_users_courses($userid, true, ['id']);
+    
+    // Iterate through courses the user is enrolled in
+    foreach ($user_courses as $user_course) {
+        if ($user_course->id == $course->id) {
+            // User is enrolled in this course
+            return true;
+        }
+    }
+    return false;
 }

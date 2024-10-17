@@ -20,6 +20,8 @@
             <FIELD NAME="action" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="Action (enrolled, suspended)"/>
             <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="Status (success, error)"/>
             <FIELD NAME="timestamp" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Timestamp"/>
+            <FIELD NAME="notes" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Administrator notes."/>
+            <FIELD NAME="admin_user_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="The ID of the account which entered this record."/>
         </FIELDS>
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -36,6 +38,9 @@
             <FIELD NAME="suspendcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many suspend records were processed"/>
             <FIELD NAME="errorcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many errors happened?"/>
             <FIELD NAME="skippedcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many records were skipped because we've looked at it before?"/>
+            <FIELD NAME="enrolnewcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many enrol records created a new account"/>
+            <FIELD NAME="manualenrolcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many enrol records created manually?"/>
+            <FIELD NAME="manualsuspendcount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="How many suspend records created manually?"/>
         </FIELDS>
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
