@@ -346,7 +346,7 @@ function process_enrolment_record($record) {
         // see that this has happened.
         if($current_enrol_status === 1) {
             $action = 'Dupe Enrol';
-            $status = 'Error';
+            $enrolment_status = 'Error';
             // #TODO send an email
 
         } else {
@@ -366,7 +366,7 @@ function process_enrolment_record($record) {
             }
             send_welcome_email($user, $course);
             $action = 'Enrol';
-            $status = 'Success';
+            $enrolment_status = 'Success';
         }
 
         // We need to differentiate between enrolments for accounts that already 
@@ -383,7 +383,7 @@ function process_enrolment_record($record) {
         // want to log the issue as an error.
         if($current_enrol_status === 0) {
             $action = 'Dupe Suspend';
-            $status = 'Error';
+            $enrolment_status = 'Error';
             // #TODO send an email
 
         } else {
@@ -391,7 +391,7 @@ function process_enrolment_record($record) {
             // Suspend the user in the course.
             suspend_user_in_course($user_id, $course->id, $elm_course_id);
             $action = 'Suspend';
-            $status = 'Success';
+            $enrolment_status = 'Success';
         }
         
     }
@@ -409,7 +409,7 @@ function process_enrolment_record($record) {
                     $user_email, 
                     $user_guid, 
                     $action, 
-                    $status,
+                    $enrolment_status,
                     '');
     
     // We return the enrolment_status so that we can count enrols and suspends
