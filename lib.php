@@ -339,19 +339,15 @@ function process_enrolment_record($record) {
 
     if ($enrolment_status === 'Enrol') {
 
-        // This person is already enrolled in this course, so why is there 
-        // another record here? This is a duplicate record sent from ELM at 
-        // a different time so it fails the hash check, but we still don't
-        // want to process it. We should still log it though so that we can
-        // see that this has happened.
-        if($current_enrol_status === 1) {
+        // Check if the user is already enrolled
+        if ($current_enrol_status === 1) {
+            // This person is already enrolled, this is likely a duplicate record
             $action = 'Dupe Enrol';
             $enrolment_status = 'Error';
-            // #TODO send an email
+            // #TODO send an email about the duplicate enrolment record
 
         } else {
-
-            // Enrol the user in the course.
+            // User is not enrolled yet, proceed with enrolment
             $enrol = enrol_get_plugin('manual');
             if ($enrol) {
                 $instance = $DB->get_record('enrol', 
@@ -362,40 +358,39 @@ function process_enrolment_record($record) {
                                                 '*', 
                                                 MUST_EXIST
                                             );
+                // Enrol the user in the course
                 $enrol->enrol_user($instance, $user_id, $instance->roleid, 0, 0, ENROL_USER_ACTIVE);
             }
+
+            // Send welcome email after successful enrolment
             send_welcome_email($user, $course);
             $action = 'Enrol';
             $enrolment_status = 'Success';
-        }
 
-        // We need to differentiate between enrolments for accounts that already 
-        // exist and the enrolments where a new account is created.
-        if($enrolnew && $enrolment_status === 'Enrol') {
-            $enrolment_status = 'Enrol New';
+            // Differentiate between new enrolments and existing ones
+            if ($enrolnew) {
+                $enrolment_status = 'Enrol New';
+            }
         }
-
 
     } elseif ($enrolment_status === 'Suspend') {
 
-        // This person isn't enrolled in this course, which means it's a duplicate
-        // or someting else is going on; either way, we don't want to drop them and
-        // want to log the issue as an error.
-        if($current_enrol_status === 0) {
+        // Check if the user is not enrolled and it's a suspend request
+        if ($current_enrol_status === 0) {
+            // This is an invalid suspend request since the user isn't enrolled
             $action = 'Dupe Suspend';
             $enrolment_status = 'Error';
-            // #TODO send an email
+            // #TODO send an email about the duplicate suspend record
 
         } else {
-
-            // Suspend the user in the course.
+            // Suspend the user in the course
             suspend_user_in_course($user_id, $course->id, $elm_course_id);
             $action = 'Suspend';
             $enrolment_status = 'Success';
         }
-        
     }
 
+    // Log the record processing details
     log_record($record_id, 
                     $hash, 
                     $record_date_created, 
@@ -411,10 +406,8 @@ function process_enrolment_record($record) {
                     $action, 
                     $enrolment_status,
                     '');
-    
-    // We return the enrolment_status so that we can count enrols and suspends
-    // and errors when we log the run.
 
+    // Return the enrolment_status for logging
     return $enrolment_status;
 
 }
