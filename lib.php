@@ -48,13 +48,13 @@ function local_psaelmsync_sync() {
         return;
     }
 
-    // Ensure that we're sorting the data by date_created in ascending order.
+    // Ensure that we're sorting the data by COURSE_STATE_DATE in ascending order.
     // This isn't strictly necessary as the API call is also sorting this way,
     // but it is important that we process them in chronological order so we 
     // double-do it here. Removing this would be an easy optimization if that
     // becomes necessary.
     usort($data['value'], function ($a, $b) {
-        return strtotime($a['date_created']) - strtotime($b['date_created']);
+        return strtotime($a['COURSE_STATE_DATE']) - strtotime($b['COURSE_STATE_DATE']);
     });
 
     // Set up variables for type count logging.
