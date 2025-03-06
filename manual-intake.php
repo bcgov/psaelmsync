@@ -227,11 +227,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // with a date range.
         if(!empty($user_emaillookup)) {
             // $apiurlfiltered = $apiurl . "&filter=date_created,gt," . urlencode($from) . "&filter=date_created,lt," . urlencode($to); // MOCK API format
-            $apiurlfiltered = $apiurl . "&%24filter=email+eq+%27" . urlencode($user_emaillookup) . "%27";
+            $apiurlfiltered = $apiurl . "?%24orderby=COURSE_STATE_DATE,date_created+asc&%24filter=email+eq+%27" . urlencode($user_emaillookup) . "%27";
         } elseif(!empty($user_guidlookup)) {
-            $apiurlfiltered = $apiurl . "&%24filter=GUID+eq+%27" . urlencode($user_guidlookup) . "%27";
+            $apiurlfiltered = $apiurl . "?%24orderby=COURSE_STATE_DATE,date_created+asc&%24filter=GUID+eq+%27" . urlencode($user_guidlookup) . "%27";
         } else {
-            $apiurlfiltered = $apiurl . "&%24filter=date_created+gt+%27" . urlencode($from) . "%27+and+date_created+lt+%27" . urlencode($to) . '%27';
+            $apiurlfiltered = $apiurl . "?%24orderby=COURSE_STATE_DATE,date_created+asc&%24filter=date_created+gt+%27" . urlencode($from) . "%27+and+date_created+lt+%27" . urlencode($to) . '%27';
         }
 
         // Make API call.
