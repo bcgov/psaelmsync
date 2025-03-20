@@ -123,6 +123,7 @@ class observer {
                             'COURSE_COMPLETE_DATE' => date('Y-m-d'),
                             'COURSE_STATE' => $enrol_status, 
                             'ENROLMENT_ID' => (int) $elm_enrolment_id, 
+                            'record_comp_id' => time(),
                             'USER_STATE' => 'Active',
                             'USER_EFFECTIVE_DATE' => '2017-02-14',
                             'COURSE_IDENTIFIER' => (int) $elmcourseid, 
