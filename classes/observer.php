@@ -64,7 +64,7 @@ class observer {
                                 $message .= 'Could not find an associated record in local_psaelmsync_logs for this completion.';
                                 
                                 // Create a dummy user object for sending the email
-                                $dummyuser = new stdClass();
+                                $dummyuser = new \stdClass();
                                 $dummyuser->email = 'noreply-psalssync@learning.gww.gov.bc.ca';
                                 $dummyuser->firstname = 'System';
                                 $dummyuser->lastname = 'Notifier';
@@ -75,7 +75,7 @@ class observer {
                                     $admin_email = trim($admin_email);
                                     
                                     // Create a recipient user object
-                                    $recipient = new stdClass();
+                                    $recipient = new \stdClass();
                                     $recipient->email = $admin_email;
                                     $recipient->id = -99; // Dummy user id
                                     $recipient->firstname = 'PSA';
@@ -122,7 +122,7 @@ class observer {
                         $data = [
                             'COURSE_COMPLETE_DATE' => date('Y-m-d'),
                             'COURSE_STATE' => $enrol_status, 
-                            // 'enrolment_id' => (int) $elm_enrolment_id, 
+                            'ENROLMENT_ID' => (int) $elm_enrolment_id, 
                             'USER_STATE' => 'Active',
                             'USER_EFFECTIVE_DATE' => '2017-02-14',
                             'COURSE_IDENTIFIER' => (int) $elmcourseid, 

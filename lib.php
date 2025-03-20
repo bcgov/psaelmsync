@@ -122,7 +122,7 @@ function process_enrolment_record($record) {
     // In current state the plan is to use the USER_STATE field to hold the 
     // enrolment ID. At some point hopefully we'll get away from the spaghetti 
     // that is our field mapping. In the meantime, we're just faking an ID.
-    $enrolment_id = floor(microtime(true) * 1000);// $record['USER_STATE'];
+    $enrolment_id = (int) $record['ENROLMENT_ID'];
     // The rest map to CData fields
     $record_date_created = $record['date_created'];
     $elm_course_id = (int) $record['COURSE_IDENTIFIER'];
