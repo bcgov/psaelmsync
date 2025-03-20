@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $record_date_created = required_param('record_date_created', PARAM_TEXT);
         $course_state = required_param('course_state', PARAM_TEXT);
         $elm_course_id = required_param('elm_course_id', PARAM_TEXT);
+        $elm_enrolment_id = required_param('elm_enrolment_id', PARAM_TEXT);
         $user_guid = required_param('guid', PARAM_TEXT);
         $class_code = required_param('class_code', PARAM_TEXT);
         $user_email = required_param('email', PARAM_TEXT);
@@ -413,6 +414,7 @@ if (!empty($data)) {
                 if (!empty($moodlecourseid)) {
                     echo '<form class="float-right ml-4" method="post" action="' . $PAGE->url . '">';
                     echo '<input type="hidden" name="elm_course_id" value="' . htmlspecialchars($record['COURSE_IDENTIFIER']) . '">';
+                    echo '<input type="hidden" name="elm_enrolment_id" value="' . htmlspecialchars($record['ENROLMENT_ID']) . '">';
                     echo '<input type="hidden" name="record_date_created" value="' . htmlspecialchars($record['date_created']) . '">';
                     echo '<input type="hidden" name="course_state" value="' . htmlspecialchars($record['COURSE_STATE']) . '">';
                     echo '<input type="hidden" name="class_code" value="' . htmlspecialchars($record['COURSE_SHORTNAME']) . '">';
