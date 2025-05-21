@@ -42,7 +42,7 @@ class observer {
                         $coursename = $course->fullname;
 
                         // Get user idnumber.
-                        $user = $DB->get_record('user', ['id' => $userid], 'id, idnumber, firstname, lastname, email');
+                        $user = $DB->get_record('user', ['id' => $userid], 'id, idnumber, firstname, lastname, email, maildisplay');
                         
                         // Get enrolment_id and another field (e.g., status) from local_psaelmsync_logs table.
                         $sql = "SELECT elm_enrolment_id, class_code, sha256hash 
@@ -81,14 +81,17 @@ class observer {
                                 foreach ($emails as $admin_email) {
                                     // Trim to remove any extra whitespace around email addresses
                                     $admin_email = trim($admin_email);
-                                    
-                                    // Create a recipient user object
-                                    $recipient = new \stdClass();
-                                    $recipient->email = $admin_email;
-                                    $recipient->id = -99; // Dummy user id
-                                    $recipient->firstname = 'PSA';
-                                    $recipient->lastname = 'Moodle';
-                                    
+
+                                    // Try to get a real user record for the recipient by email, fallback to dummy
+                                    $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, firstname, lastname, maildisplay', IGNORE_MISSING);
+                                    if (!$recipient) {
+                                        $recipient = new \stdClass();
+                                        $recipient->email = $admin_email;
+                                        $recipient->id = -99;
+                                        $recipient->firstname = 'PSA';
+                                        $recipient->lastname = 'Moodle';
+                                    }
+
                                     // Send the email
                                     email_to_user($recipient, $dummyuser, $subject, $message);
                                 }
@@ -209,11 +212,14 @@ class observer {
 
                                 foreach ($emails as $admin_email) {
                                     $admin_email = trim($admin_email);
-                                    $recipient = new \stdClass();
-                                    $recipient->email = $admin_email;
-                                    $recipient->id = -99;
-                                    $recipient->firstname = 'PSA';
-                                    $recipient->lastname = 'Moodle';
+                                    $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, firstname, lastname, maildisplay', IGNORE_MISSING);
+                                    if (!$recipient) {
+                                        $recipient = new \stdClass();
+                                        $recipient->email = $admin_email;
+                                        $recipient->id = -99;
+                                        $recipient->firstname = 'PSA';
+                                        $recipient->lastname = 'Moodle';
+                                    }
 
                                     email_to_user($recipient, $dummyuser, $subject, $message);
                                 }
