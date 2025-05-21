@@ -42,7 +42,7 @@ class observer {
                         $coursename = $course->fullname;
 
                         // Get user idnumber.
-                        $user = $DB->get_record('user', ['id' => $userid], 'id, idnumber, firstname, lastname, email, maildisplay');
+                        $user = $DB->get_record('user', ['id' => $userid], 'id, idnumber, firstname, lastname, email, maildisplay, username');
                         
                         // Get enrolment_id and another field (e.g., status) from local_psaelmsync_logs table.
                         $sql = "SELECT elm_enrolment_id, class_code, sha256hash 
@@ -83,7 +83,7 @@ class observer {
                                     $admin_email = trim($admin_email);
 
                                     // Try to get a real user record for the recipient by email, fallback to dummy
-                                    $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, firstname, lastname, maildisplay', IGNORE_MISSING);
+                                    $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, firstname, lastname, maildisplay, username', IGNORE_MISSING);
                                     if (!$recipient) {
                                         $recipient = new \stdClass();
                                         $recipient->email = $admin_email;
@@ -212,7 +212,7 @@ class observer {
 
                                 foreach ($emails as $admin_email) {
                                     $admin_email = trim($admin_email);
-                                    $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, firstname, lastname, maildisplay', IGNORE_MISSING);
+                                    $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, firstname, lastname, maildisplay, username', IGNORE_MISSING);
                                     if (!$recipient) {
                                         $recipient = new \stdClass();
                                         $recipient->email = $admin_email;
