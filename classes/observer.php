@@ -45,7 +45,16 @@ class observer {
                         $user = $DB->get_record('user', ['id' => $userid], 'idnumber, firstname, lastname, email');
                         
                         // Get enrolment_id and another field (e.g., status) from local_psaelmsync_logs table.
-                        $deets = $DB->get_record('local_psaelmsync_logs', ['elm_course_id' => $elmcourseid, 'user_id' => $userid], 'elm_enrolment_id, class_code, sha256hash');
+                        // $deets = $DB->get_record('local_psaelmsync_logs', ['elm_course_id' => $elmcourseid, 'user_id' => $userid], 'elm_enrolment_id, class_code, sha256hash');
+                        $sql = "SELECT elm_enrolment_id, class_code, sha256hash 
+                                FROM {local_psaelmsync_logs} 
+                                WHERE elm_course_id = :courseid AND user_id = :userid 
+                                ORDER BY timestamp DESC LIMIT 1";
+                        
+                        $params = ['courseid' => $elmcourseid, 'userid' => $userid];
+                        $records = $DB->get_records_sql($sql, $params);
+                        
+                        $deets = reset($records); // get the first record if it exists
 
                         if (!$deets) {
 
