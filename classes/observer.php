@@ -83,7 +83,8 @@ class observer {
                                     $admin_email = trim($admin_email);
 
                                     // Try to get a real user record for the recipient by email, fallback to dummy
-                                    $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, firstname, lastname, maildisplay, username', IGNORE_MISSING);
+                                    // $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, firstname, lastname, maildisplay, username', IGNORE_MISSING);
+                                    $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, username, maildisplay, firstname, lastname, alternatename, middlename, lastnamephonetic, firstnamephonetic', IGNORE_MISSING);
                                     if (!$recipient) {
                                         $recipient = new \stdClass();
                                         $recipient->email = $admin_email;
@@ -152,8 +153,8 @@ class observer {
                             CURLOPT_POSTFIELDS => $jsonData,
                             CURLOPT_HTTPHEADER => array(
                                 "x-cdata-authtoken: " . $apitoken,
-                                "Content-Type: application/json",
-                                "Content-Length: " . strlen($jsonData)
+                                "Content-Type: application/json"
+                                // Removed Content-Length to let cURL calculate it automatically
                                 )
                             );
                         curl_setopt_array($ch, $options);
@@ -161,6 +162,7 @@ class observer {
                         $curlerror = curl_error($ch);
                         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                         curl_close($ch);
+                        $responsebody = $response;
 
                         $log = [
                             'record_id' => $record_id,
@@ -203,6 +205,7 @@ class observer {
                                 $message .= "HTTP Code: " . $httpcode . "\n";
                                 $message .= "Error: " . $curlerror . "\n";
                                 $message .= "Payload: " . $jsonData . "\n";
+                                $message .= "Response Body: " . $responsebody . "\n";
 
                                 $dummyuser = new \stdClass();
                                 $dummyuser->email = 'noreply-psalssync@learning.gww.gov.bc.ca';
@@ -212,7 +215,8 @@ class observer {
 
                                 foreach ($emails as $admin_email) {
                                     $admin_email = trim($admin_email);
-                                    $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, firstname, lastname, maildisplay, username', IGNORE_MISSING);
+                                    // $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, firstname, lastname, maildisplay, username', IGNORE_MISSING);
+                                    $recipient = $DB->get_record('user', ['email' => $admin_email], 'id, email, username, maildisplay, firstname, lastname, alternatename, middlename, lastnamephonetic, firstnamephonetic', IGNORE_MISSING);
                                     if (!$recipient) {
                                         $recipient = new \stdClass();
                                         $recipient->email = $admin_email;
