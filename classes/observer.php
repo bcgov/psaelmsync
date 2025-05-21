@@ -42,10 +42,9 @@ class observer {
                         $coursename = $course->fullname;
 
                         // Get user idnumber.
-                        $user = $DB->get_record('user', ['id' => $userid], 'idnumber, firstname, lastname, email');
+                        $user = $DB->get_record('user', ['id' => $userid], 'id, idnumber, firstname, lastname, email');
                         
                         // Get enrolment_id and another field (e.g., status) from local_psaelmsync_logs table.
-                        // $deets = $DB->get_record('local_psaelmsync_logs', ['elm_course_id' => $elmcourseid, 'user_id' => $userid], 'elm_enrolment_id, class_code, sha256hash');
                         $sql = "SELECT elm_enrolment_id, class_code, sha256hash 
                                 FROM {local_psaelmsync_logs} 
                                 WHERE elm_course_id = :courseid AND user_id = :userid 
@@ -156,6 +155,8 @@ class observer {
                             );
                         curl_setopt_array($ch, $options);
                         $response = curl_exec($ch);
+                        $curlerror = curl_error($ch);
+                        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                         curl_close($ch);
 
                         $log = [
@@ -175,8 +176,50 @@ class observer {
                             'action' => 'Complete',
                             'status' => 'Success',
                             'timestamp' => time(),
+                            'notes' => ''
                         ];
-                        
+
+                        if ($response === false || $httpcode >= 400) {
+                            $log['status'] = 'Error';
+                            $log['notes'] = 'cURL failed: ' . ($curlerror ?: 'HTTP ' . $httpcode);
+                        }
+
+                        if ($log['status'] === 'Error') {
+                            $admin_emails = get_config('local_psaelmsync', 'notificationemails');
+
+                            if (!empty($admin_emails)) {
+                                $emails = explode(',', $admin_emails);
+
+                                $subject = "Completion API Sync Failure";
+
+                                $message = "A completion sync failed:\n\n";
+                                $message .= $user->firstname . ' ' . $user->lastname . ': https://learning.gww.gov.bc.ca/user/view.php?id=' . $userid . "\n";
+                                $message .= $coursename . ': https://learning.gww.gov.bc.ca/course/view.php?id=' . $courseid . "\n";
+                                $message .= "ELM Course ID: " . $elmcourseid . "\n";
+                                $message .= "API URL: " . $apiurl . "\n";
+                                $message .= "HTTP Code: " . $httpcode . "\n";
+                                $message .= "Error: " . $curlerror . "\n";
+                                $message .= "Payload: " . $jsonData . "\n";
+
+                                $dummyuser = new \stdClass();
+                                $dummyuser->email = 'noreply-psalssync@learning.gww.gov.bc.ca';
+                                $dummyuser->firstname = 'System';
+                                $dummyuser->lastname = 'Notifier';
+                                $dummyuser->id = -99;
+
+                                foreach ($emails as $admin_email) {
+                                    $admin_email = trim($admin_email);
+                                    $recipient = new \stdClass();
+                                    $recipient->email = $admin_email;
+                                    $recipient->id = -99;
+                                    $recipient->firstname = 'PSA';
+                                    $recipient->lastname = 'Moodle';
+
+                                    email_to_user($recipient, $dummyuser, $subject, $message);
+                                }
+                            }
+                        }
+
                         $DB->insert_record('local_psaelmsync_logs', (object)$log);
 
                     }
